@@ -1,0 +1,136 @@
+body {
+      font-family:  'Lato', sans-serif;
+      font-size: 16pt;
+      font-style: normal;
+      font-variant: normal;
+    }
+
+.vis-group-line{
+    height: 5px;
+    background-color: #ced7e4;
+    /*margin: auto;*/
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    position: absolute;
+    border-width: 5px;
+    border-radius: 2px;
+}
+.vis-item.cpr{
+  background-color: #FFFFFF;
+  width:unset !important;
+}
+
+.vis-range{
+  border-style: none !important;
+}
+
+.cpr-axis{
+  top: -7px;
+  border-radius: 7px !important;
+  background-color: #30cbea !important;
+}
+
+.vis-item {
+  font-family: Calibri, Candara, Segoe, "Segoe UI", Optima, Arial, sans-serif;
+  font-size: 16px;
+  font-style: normal;
+  font-variant: normal;
+  font-weight: 100;
+  line-height: 20px;
+    }
+
+.vis-item-content{
+  left: 0px !important;
+}
+
+#text{
+  font-family: Calibri, Candara, Segoe, "Segoe UI", Optima, Arial, sans-serif;
+  font-size: 16px;
+  font-style: normal;
+  font-variant: normal;
+  font-weight: bold;
+  line-height: 20px;
+}
+.vis-item,
+    .vis-item.vis-line {
+      border-width: 3px;
+    }
+
+.vis-item.critical {
+      background-color: transparent;
+      border-color: none;
+      border-width: 0px;
+    }
+
+.vis-item.vis-box.critical {
+      top:0px !important;
+}
+.vis-item.vis-box.action {
+      text-align: left;
+      background-color: #ffffff;
+    }
+.vis-item.vis-dot.action.rn1 {
+      border-color: #30cbea;
+      
+    }
+
+.vis-item.vis-line.arousal{
+  border-width: 0px;
+}
+
+.vis-item.vis-box.arousal{
+  left: 0px !important;
+  top:0px !important;
+}
+
+.vis-item.vis-dot.arousal {
+      border-color: #9966ff;
+    }
+
+.vis-item.vis-dot.action.rn2 {
+      border-color: #30cbea;
+      
+    }
+
+.vis-item.vis-dot.action.rn3 {
+      border-color: #30cbea;
+      
+    }
+
+.vis-item.vis-dot.action.rn4 {
+      border-color: #30cbea;
+      
+    }
+
+.vis-item.vis-dot.action.shock.rn1{
+  border-color: #994fdd;
+}
+
+.vis-item.vis-dot.action.shock.rn2{
+  border-color: #994fdd;
+}
+
+.vis-item.vis-dot.action.shock.rn3{
+  border-color: #994fdd;
+}
+.vis-item.vis-dot.action.shock.rn4{
+  border-color: #994fdd;
+}
+
+  .vis-item.vis-line.action {
+      border-color: #72748b;
+      border-width: 1px;
+    }
+}
+
+.special-time{
+  background-color: #ffffff;
+  border-color: #ffffff;
+  font-weight: 500;
+}
+    div.vis-item-content{
+      margin-left: none;
+    }}
+}

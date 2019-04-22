@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html ng-app="group-analytics">
+  <head>
+    <title>Data Capture App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1 shrink-to-fit=no">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
+    <link rel="stylesheet" href="/css/styles.css">
+  </head>
+  <body>
+        <br>
+        <ng-view>
+
+        </ng-view>
+        <br>
+  <!-- Template -->   
+<script type="text/ng-template" id="/allSessions.html">
+  
+  <nav class="navbar navbar-expand-md navbar-dark bg-dark mb-4">
+          <a class="navbar-brand" ng-href="#/"> Home </a>
+  </nav>
+  <main role="main" class="container">
+      <div>
+        <h1>Sessions</h1>
+        <hr>
+        <p class="lead">All Sessions</p>
+      </div>
+      <div class="my-3 p-3 bg-white rounded box-shadow">
+        <div><button type="button" class="btn btn-primary btn-sm" ng-click="redirectSession();"> Add Session </button> 
+        </div> 
+        <br/>
+            <div class="pb-2 pt-2 mb-0 small lh-125 border-bottom border-gray" ng-repeat="todo in sessionData">
+              <div class="d-flex justify-content-end align-items-center w-100">
+                  <div class="flex-grow-1">
+                    <span>{{ todo.id }} </span> |
+                    <span>{{ todo.name }} </span> |
+                    <span class="text-info">{{ todo.room }} </span> |
+                    <span class="text-secondary font-weight-light"> Start: {{ todo.time_start | date:'medium' }}</span> <span class="text-secondary font-weight-light"> End: {{ todo.time_end | date:'medium' }}</span>
+                  </div>
+                  <div class=""><a href="javascript:void(0)" class="btn btn-primary btn-sm" ng-click="listActions(todo.id)"> Actions </a></div>
+                  <div class=""><a href="javascript:void(0)" class="mx-2 btn btn-success btn-sm" ng-click="redirectSources(todo.id)"> Sources </a></div>
+                  <div class=""><a href="javascript:void(0)" class="mx-2 btn btn-info btn-sm" ng-click="redirectObjects(todo.id)"> Objects </a></div>
+                  <div class=""><a href="javascript:void(0)" class="mx-2 btn btn-warning btn-sm" ng-click="redirectCapture(todo.id)"> Capture </a></div>
+                  <div class=""><a href="javascript:void(0)" class="mx-2 btn btn-secondary btn-sm" ng-click="redirectTimeline(todo.id)"> Timeline </a></div>
+
+              </div>
+            </div>
+          
+      </div>
+  </main>
+</script>
+
+<!-- Adding this new thing to select actions according to the simulation --> 
+<script type="text/ng-template" id="/addActionsperSession.html">
+<nav class="navbar navbar-expand-md navbar-dark bg-dark mb-4">
+          <a class="navbar-brand" ng-href="#/"> Home </a>
+  </nav>
+<main role="main" class="container">
+      <div>
+        <h1>Actions</h1>
+        <hr>
+        <p class="lead">Add Actions to this Session</p>
+      </div>
+      
+      <div class="my-3 p-3 bg-white rounded box-shadow">
+            <div class="pb-2 pt-2 mb-0 small lh-125 border-bottom border-gray" ng-repeat="action in actionData">
+              <div class="d-flex justify-content-sm-between align-items-center w-100">
+             <div>{{ action.name }} </div>
+              <div><button type="button" class="btn btn-outline-primary btn-sm mx-1" 
+                    role="button" ng-click="addActionToSession(action.id,action.name, session.id)"> {{ Add }}</button> 
+              </div>
+              </div>
+            </div>
+
+      </div>
+
+      <div class="my-3 p-3 bg-white rounded box-shadow">
+            <div class="pb-2 pt-2 mb-0 small lh-125 border-bottom border-gray" ng-repeat="sel in selectedactions">
+              <div class="d-flex align-items-center w-100">
+                 <div class="p-2 flex-grow-1">{{ sel.action_desc }} 
+                  
+                 </div>
+                  <div class="p-2"><a href="javascript:void(0)" class="btn btn-outline-danger btn-sm" ng-click="deleteAction(sel.id)"> Delete </a></div>
+
+            </div>
+      </div>
+
+  </main>
+</script>
+
+<script type="text/ng-template" id="/allActions.html">
+<nav class="navbar navbar-expand-md navbar-dark bg-dark mb-4">
+          <a class="navbar-brand" ng-href="#/"> Home </a>
+  </nav>
+<main role="main" class="container">
+      <div>
+        <h1>Actions</h1>
+        <hr>
+        <p class="lead">Log Actions</p>
+      </div>
+      
+      <div class="my-3 p-3 bg-white rounded box-shadow">
+            <div class="pb-2 pt-2 mb-0 small lh-125 border-bottom border-gray" ng-repeat="action in actionData">
+              <div class="d-flex justify-content-sm-between align-items-center w-100">
+             <div>{{ action.name }} </div>
+              <div><button type="button" ng-repeat="object in objectData" class="btn btn-outline-primary btn-sm mx-1" 
+                    role="button" ng-click="logActionObject(object.id,action.id,action.name)"> {{ object.name }}</button> </div>
+              </div>
+            </div>
+      </div>
+
+      <div class="my-3 p-3 bg-white rounded box-shadow">
+            <div class="pb-2 pt-2 mb-0 small lh-125 border-bottom border-gray" ng-repeat="sel in selectedactions">
+              <div class="d-flex align-items-center w-100">
+                 <div class="p-2 flex-grow-1">{{ sel.action_desc }} 
+                  <span class="text-secondary font-weight-light"> at: {{ sel.time_action | date:'medium' }}</span>
+                 </div>
+                  <div class="p-2"> <span class="text-info">  {{ sel.name }} <span></div>
+                  <div class="p-2"><a href="javascript:void(0)" class="btn btn-outline-danger btn-sm" ng-click="deleteAction(sel.id)"> Delete </a></div>
+
+            </div>
+      </div>
+
+  </main>
+</script>
+
+<script type="text/ng-template" id="/addSession.html">
+  <nav class="navbar navbar-expand-md navbar-dark bg-dark mb-4">
+          <a class="navbar-brand" ng-href="#/"> Home </a>
+  </nav>
+  <main role="main" class="container">
+      <div>
+        <h1>Sessions</h1>
+        <hr>
+        <p class="lead">Add Session</p>
+      </div>
+      <div class="session-form">
+        <form>
+          <div class="form-group">
+            <span>Session name:</span><input type="text" class="form-control input-lg" placeholder="Enter text..." ng-model="formData.name">
+            <span>Room:</span><input type="text" class="form-control input-lg" placeholder="Enter text..." ng-model="formData.room">
+          </div>
+          <button type="submit" class="btn btn-primary btn-lg btn-block" ng-click="createSession()">Add Session</button>
+          <br>
+        </form>
+      </div>
+  </main>
+</script>
+
+
+<script type="text/ng-template" id="/addMedia.html">
+ <nav class="navbar navbar-expand-md navbar-dark bg-dark mb-4">
+          <a class="navbar-brand" ng-href="#/"> Home </a>
+  </nav>
+  <main role="main" class="container">
+      <div>
+        <h1>Data Sources</h1>
+        <hr>
+        <p class="lead">Add Data Sources</p>
+      </div>
+      
+      <div class="my-3 p-3 bg-white rounded box-shadow">
+            <div class="pb-2 pt-2 mb-0 small lh-125 border-bottom border-gray" ng-repeat="media in sourceData">
+              <div class="d-flex justify-content-sm-between align-items-center w-100">
+              <div>{{ media.vendor_name }} </div>
+                <div><button type="button" class="btn btn-primary btn-sm" ng-click="addSourceMedia(media.id,media.vendor_name);"> Add </button></a> 
+                </div>
+              </div>
+            </div>
+      </div>
+
+      <div class="my-3 p-3 bg-white rounded box-shadow">
+            <div class="pb-2 pt-2 mb-0 small lh-125 border-bottom border-gray" ng-repeat="item in sourceSession">
+              <div class="d-flex justify-content-sm-between align-items-center w-100">
+             <div>{{ item.name }} </div>
+              </div>
+            </div>
+      </div>
+          
+          <button type="submit" class="btn btn-primary btn-lg btn-block" ng-click="assignObjects()">Assign Objects</button>
+          <br>
+      </div>
+  </main>
+</script>
+
+<script type="text/ng-template" id="/addObjects.html">
+  <nav class="navbar navbar-expand-md navbar-dark bg-dark mb-4">
+          <a class="navbar-brand" ng-href="#/"> Home </a>
+  </nav>
+  <main role="main" class="container">
+      <div>
+        <h1>Objects</h1>
+        <hr>
+        <p class="lead">Which objects:</p>
+      </div>
+      
+      <div class="my-3 p-3 bg-white rounded box-shadow">
+            <div class="pb-2 pt-2 mb-0 small lh-125 border-bottom border-gray" ng-repeat="object in objectsData">
+              <div class="d-flex justify-content-sm-between align-items-center w-100">
+              <div>{{ object.name }} </div>
+                <div><button type="button" class="btn btn-primary btn-sm" ng-click="addObjectSession(object.id,object.name);"> Add </button></a> 
+                </div>
+              </div>
+            </div>
+      </div>
+
+      <div class="my-3 p-3 bg-white rounded box-shadow">
+            <div class="pb-2 pt-2 mb-0 small lh-125 border-bottom border-gray" ng-repeat="item in objectsperSessionData">
+              <div class="d-flex justify-content-end align-items-center w-100">
+                <div class="flex-fill">{{ item.name }}   
+                  <div><span class="text-secondary font-italic"> tag: {{selectedTracker}} </span>
+                        <span class="text-secondary font-italic"> empatica: {{selectedWristband}} </span>
+                  </div>
+                </div>
+
+              <div class="flex-fill"> 
+              <select ng-init="selectedTracker = item.serial"  
+                      ng-model="selectedTracker"
+                      ng-change="updateTagObjSession(item.id, selectedTracker)">
+                <option value="">--None--</option>
+                <option ng-repeat="x in trackers_pozyx" value="{{x.serial}}">{{x.serial}}</option>
+              </select>
+              </div>
+
+              <div class="flex-fill"> 
+              <select ng-if="item.id_object == 6" ng-init="selectedWristband = item.empatica"  
+                      ng-model="selectedWristband"
+                      ng-change="updateWristbandObjSession(item.id, selectedWristband)">
+                <option value="">--None--</option>
+                <option ng-repeat="x in trackers_empatica" value="{{x.serial}}">{{x.serial}}</option>
+              </select>
+
+              <p class="text-secondary" ng-if="item.id_object != 6"> Not available </p>
+              </div>
+
+             </div>
+            </div>
+      </div>
+          
+          <button type="submit" class="btn btn-primary btn-lg btn-block" ng-click="controlSources()">Manage Capture</button>
+          <br>
+      </div>
+  </main>
+</script>
+
+<script type="text/ng-template" id="/controlSources.html">
+<nav class="navbar navbar-expand-md navbar-dark bg-dark mb-4">
+          <a class="navbar-brand" ng-href="#/"> Home </a>
+  </nav>
+<main role="main" class="container">
+      <div>
+        <h1>Manage Capture</h1>
+        <hr>
+        <p class="lead">Start/Stop</p>
+      </div>
+
+      <div class="my-3 p-3 bg-white rounded box-shadow">
+            <div class="pb-2 pt-2 mb-0 small lh-125 border-bottom border-gray" ng-repeat="item in sourceSession">
+              <div class="d-flex justify-content-sm-between align-items-center w-100">
+                    <div>{{ item.name }} 
+                      <span class="text-secondary font-weight-light"> start: {{ item.start_capture | date:'mediumTime' }}</span>
+                      <span class="text-secondary font-weight-light"> end: {{ item.end_capture | date:'mediumTime' }}</span>
+                    </div>
+                  <div>
+                    <button class="btn btn-sm" ng-class="{'btn-primary': item.status == 0, 'disabled': item.status == 1 }" ng-click="startCapture(item.id_session,item.id_datatype,item.id_session_datatype);"> Start </button>
+
+                    <button class="btn btn-sm" ng-class="{'btn-primary': item.status == 1, 'disabled': item.status == 0 }" ng-click="stopCapture(item.id_session,item.id_datatype,item.id_session_datatype);"> Stop </button>
+                  </div>
+              </div>
+            </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-lg btn-block" ng-click="endSession()">End Session</button>
+
+</main>
+</script>
+
+    
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js" integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T" crossorigin="anonymous"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.6/angular.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.6/angular-route.min.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/moment.js/2.8.4/moment.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/vis.js"></script>
+  </body>
+</html>

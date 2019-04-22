@@ -1,0 +1,170 @@
+<html>
+<head>
+  <title>Timeline | A lot of grouped data</title>
+  <!-- Load jquery for ajax support -->
+  <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+  <script src="../dist/vis.js"></script>
+  <script src="../js/group1-ctimes.js"></script>
+  <link href="../dist/vis-timeline-graph2d.min.css" rel="stylesheet" type="text/css" />
+
+  <style type="text/css">
+    body {
+      color: #4D4D4D;
+      font: 10pt arial;
+    }
+    .vis-item.low  { background-color: #e9f2ff; }
+    .vis-item.medium      { background-color: #98d5fb; }
+    .vis-item.high { background-color: #1a53de; }
+
+    .vis-item.vis-box.action{
+      background-color: #ffffff !important;
+      border-color: #ffffff !important;
+    }
+    .vis-item.vis-dot.action{
+      border-color: #ffffff !important;
+    }
+    .vis-item.vis-line.action{
+      border-left-width: 5px;
+      border-color: #75c841 !important;
+    }
+
+    .vis-item.vis-dot.ar{
+      border-color: #f79646;
+    }
+    .vis-range{
+    border-style: none !important;
+    }
+
+    .vis-item-content{
+      height:25px !important;
+    }
+
+    .vis-time-axis .vis-grid.vis-minor {
+    border-color: #ffffff !important;
+    }
+
+    .vis-timeline{
+     border-color: #ffffff !important;
+    }
+
+    .vis-panel.vis-bottom, .vis-panel.vis-center, .vis-panel.vis-left, .vis-panel.vis-right, .vis-panel.vis-top{
+      border-color: #ffffff !important;
+    }
+
+    .vis-foreground .vis-group {
+        border-bottom: 1px solid #bfbfbf69 !important;
+    }
+
+    .vis-labelset .vis-label {
+    border-bottom: 1px solid #bfbfbf69 !important;
+    }
+    .vis-time-axis .vis-text {
+    color: #4d4d4d6e;
+    }
+    .vis-custom-time{
+      background-color: #ff0100 !important;
+      z-index: 2 !important;
+    }
+    #list-actions.text{
+      font: 8pt arial;
+    }
+  </style>
+  
+</head>
+
+<body onresize="/*timeline.checkResize();*/">
+<h1>Physical Intensity - Arousal - Activity Timeline</h1>
+
+
+<div id="mytimeline"></div>
+
+<br/>
+<h3>Actions</h3>
+<div id="list-actions" class='text'></div>
+
+<script type="text/javascript">
+  var current_url = window.location.href;
+  var group_n = parseInt(current_url.split("/").slice(-1));
+  var today = new Date();
+  var dd = today.getDate();
+  var mm = today.getMonth()+1; //January is 0!
+
+  var yyyy = today.getFullYear();
+  if(dd<10){
+      dd='0'+dd;
+  } 
+  if(mm<10){
+      mm='0'+mm;
+  } 
+  var today = yyyy+'-'+mm+'-'+dd;
+  // load data via an ajax request. When the data is in, load the timeline
+  $.ajax({
+    url: 'http://localhost:3000/data/group'+group_n+'.json',
+    success: function (data) {
+
+      // create groups
+      var groups = new vis.DataSet([
+        {id: 1, content: 'Actions'},
+        {id: 2, content: 'Nurse&nbsp;1'},
+        {id: 3, content: 'Nurse&nbsp;2'},
+        {id: 4, content: 'Nurse&nbsp;3'},
+        {id: 5, content: 'Nurse&nbsp;4'}
+      ]);
+
+      var items = new vis.DataSet(data);
+
+
+      // specify options
+      var options = {
+        stack: false,
+        start: time_start,
+        end: time_end,
+        editable: false,
+        margin: {
+          item: 10, // minimal margin between items
+          axis: 40   // minimal margin between items and the axis
+        },
+        orientation: 'top',
+        showMajorLabels: false
+        //showMinorLabels: false,
+      };
+
+      // create a Timeline
+      var container = document.getElementById('mytimeline');
+      timeline = new vis.Timeline(container, null, options);
+      timeline.setGroups(groups);
+      timeline.setItems(items);
+      timeline.addCustomTime(ask, 't1');
+      timeline.addCustomTime(deteriorate, 't2');
+
+      //get element where the content is
+      var contents = document.getElementsByClassName("vis-item-content");
+      for(var i = 0; i < contents.length; i++){
+                   
+        if(contents[i].innerHTML.length > 5){
+          
+          var node = document.createElement("div");
+          var textnode = document.createTextNode(contents[i].innerHTML);
+          node.appendChild(textnode);
+          document.getElementById("list-actions").appendChild(node);
+
+          contents[i].innerHTML = " ";
+        }
+        //contents[i].innerText="Hello JavaScript!";    // Change the content
+        }
+
+    },
+    error: function (err) {
+      console.log('Error', err);
+      if (err.status === 0) {
+        alert('Failed to load data/basic.json.\nPlease run this example on a server.');
+      }
+      else {
+        alert('Failed to load data/basic.json.');
+      }
+    }
+  });
+</script>
+
+</body>
+</html>

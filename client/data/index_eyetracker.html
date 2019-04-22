@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Timeline</title>
+    <meta charset="utf-8" />
+    <meta charset="UTF-8">
+    <link rel="shortcut icon" href="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <script src="js/go.js"></script>
+    
+    <script id="code">
+      var data = 
+
+  function init() {
+
+    var $ = go.GraphObject.make;  // for conciseness in defining templates
+    myDiagram =
+      $(go.Diagram, "myDiagramDiv",  // must name or refer to the DIV HTML element
+        {
+          // start everything in the middle of the viewport
+          initialContentAlignment: go.Spot.Center,
+          isReadOnly: true, 
+          // have mouse wheel events zoom in and out instead of scroll up and down
+          //"toolManager.mouseWheelBehavior": go.ToolManager.WheelZoom,
+          // support double-click in background creating a new node
+         // "clickCreatingTool.archetypeNodeData": { text: "new node" },
+          // enable undo & redo
+          "undoManager.isEnabled": false
+        });
+
+      myDiagram.add(
+        $(go.Part,  // this Part is not bound to any model data
+          { layerName: "Background", position: new go.Point(0, 0),
+            selectable: false, pickable: false },
+          $(go.Picture, "img/TA-Part.png")
+        ));
+
+    // define the Node template
+    myDiagram.nodeTemplate =
+      $(go.Node, "Auto",
+        new go.Binding("location", "loc", go.Point.parse).makeTwoWay(go.Point.stringify),
+        // define the node's outer shape, which will surround the TextBlock
+         $(go.Shape, "Circle",
+        { width: 50, height: 50, stroke: null, fill: "transparent" },
+        new go.Binding("fill", "color2")),  // shape.fill = data.color
+        $(go.Shape, "Circle", 
+          { width: 30, height: 30, strokeWidth: 0, fill: "white", stroke: null },
+          new go.Binding("fill", "color1")),
+        $(go.TextBlock,
+          {
+            font: "bold 11pt helvetica, bold arial, sans-serif",
+            editable: false  // editing the text automatically updates the model data
+          },
+          new go.Binding("text").makeTwoWay())
+      );
+    
+   
+    // replace the default Link template in the linkTemplateMap
+    myDiagram.linkTemplate =
+      $(go.Link,  // the whole link panel
+        {
+          curve: go.Link.Bezier, adjusting: go.Link.Stretch,
+          reshapable: true, relinkableFrom: true, relinkableTo: true,
+          toShortLength: 3
+        },
+        new go.Binding("points").makeTwoWay(),
+        new go.Binding("curviness"),
+        $(go.Shape,  // the link shape
+          { strokeWidth: 1.5}),
+        $(go.Shape,  // the arrowhead
+          { toArrow: "standard", stroke: null }),
+        $(go.Panel, "Auto",
+          $(go.Shape,  // the label background, which becomes transparent around the edges
+            {
+              fill: $(go.Brush, "Radial",
+                      { 0: "rgb(240, 240, 240)", 0.3: "rgb(240, 240, 240)", 1: "rgba(240, 240, 240, 0)" }),
+              stroke: null
+            }),
+          $(go.TextBlock, "transition",  // the label text
+            {
+              textAlign: "center",
+              font: "10pt helvetica, arial, sans-serif",
+              margin: 4,
+              editable: true  // enable in-place editing
+            },
+            // editing the text automatically updates the model data
+            new go.Binding("text").makeTwoWay())
+        )
+      );
+    // read in the JSON data from the "mySavedModel" element
+    load();
+  }
+  // Show the diagram's model in JSON format
+  function save() {
+    document.getElementById("mySavedModel").value = myDiagram.model.toJson();
+  }
+  function load() {
+    myDiagram.model = go.Model.fromJson(data);
+    console.log(myDiagram.model)
+  }
+</script>
+
+<body onload="init()">
+  <div id="sample">
+  <div id="myDiagramDiv" style="border: solid 1px black; width: 1920px; height: 1080px"></div>
+</body>
+</html>
