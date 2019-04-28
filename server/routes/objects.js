@@ -86,7 +86,7 @@ router.get('/objectsession/:ids', (req, res, next) => {
 router.get('/studentsession/:ids', (req, res, next) => {
   const results = [];
     //id_object = 1 = students
-    con.query('SELECT * FROM object_session WHERE id_session = ? and (id_object = 1 OR id_object = 6) ORDER BY id ASC;',[req.params.ids], (err,rows) => {
+    con.query('SELECT * FROM object_session WHERE id_session = ? ORDER BY name ASC;',[req.params.ids], (err,rows) => {
     if(err) throw err;
 
     rows.forEach( (row) => {

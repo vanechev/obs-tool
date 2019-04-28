@@ -7,6 +7,8 @@ $routeProvider
             controller: 'mainController'})
 .when('/addsession', {templateUrl: '/addSession.html',
             controller: 'sessionController'})
+.when('/actions/:id', {templateUrl: '/addActionstoSession.html',
+            controller: 'actionsessionController'})
 .when('/addactions/:id', {templateUrl: '/allActions.html',
             controller: 'actionsController'})
 .when('/add', {})
@@ -137,7 +139,7 @@ app.controller('sessionController', function($scope, $location, $routeParams, $h
       $scope.formData = {};
       $scope.sessionData = data;
       console.log(data.id);
-      $location.path('/media/'+data.id);
+      $location.path('/actions/'+data.id);
     })
     .error((error) => {
       console.log('Error: ' + error);
@@ -162,23 +164,27 @@ app.controller('actionsController', function($scope, $location, $route, $routePa
   $scope.objectData = {};
   $scope.selectedactions = {}
   $scope.sessionid = $routeParams.id;
+  $scope.fNotes = [];
 
   var dataObj = {
         id_session : $scope.sessionid
     };
   
-  //get all actions
-  $http.get('/api/v1/actions/all')
-  .success(function(objs){
-    $scope.actionData = objs;
+  //get all actions that were selected to this session
+  $http.post('/api/v1/actions/allactionssession/', dataObj)
+  .success(function(actionspersession){
+    $scope.actionData = actionspersession;
+    console.log(actionspersession);
   })
   .error(function(error){
     console.log('Error: ' + error);
   });
-  //this gets all actions that have been selected by the user in a specific session
-  $http.post('/api/v1/actions/actionsinsession', dataObj)
+
+  //this gets all actions that has an object associated (has been logged by user)
+  $http.post('/api/v1/actions/actionswithobjects', dataObj)
   .success(function(objs){
     $scope.selectedactions = objs;
+    console.log(objs);
   })
   .error(function(error){
     console.log('Error: ' + error);
@@ -193,18 +199,21 @@ app.controller('actionsController', function($scope, $location, $route, $routePa
   });
 
 
-  $scope.logActionObject = function(objID,actID,actDesc){
+  $scope.logActionObject = function(objID,actsessionID,actID,actDesc){
     
     const dataObj = {
         id_session : $scope.sessionid,
         id_object : objID,
-        id_action : actID,
+        id_action: actID,
+        id_actionsession : actsessionID,
         desc: actDesc
     };
     //console.log(dataObj);
-    $http.post('/api/v1/actions/insertactionsession', dataObj )
+    //add action-session-object
+    $http.post('/api/v1/actions/addactionsectionobject', dataObj )
         .success(function(data){
           $scope.selectedactions = data;
+          console.log(data);
         })
         .error((error) => {
           console.log('Error: ' + error);
@@ -212,14 +221,34 @@ app.controller('actionsController', function($scope, $location, $route, $routePa
 
   };//end log
 
-  $scope.deleteAction = function(actID){
+  $scope.logStartStopActionSession = function(actID,actDesc){
     
     const dataObj = {
         id_session : $scope.sessionid,
-        id_action : actID
+        id_action: actID,
+        desc: actDesc
+    };
+    console.log(dataObj);
+    //add action-session-object
+    $http.post('/api/v1/actions/addstartstopaction', dataObj )
+        .success(function(data){
+          $scope.selectedactions = data;
+          console.log(data);
+        })
+        .error((error) => {
+          console.log('Error: ' + error);
+        });
+
+  };//end log
+
+  $scope.deleteActionObject = function(actID){
+    
+    const dataObj = {
+        id_session : $scope.sessionid,
+        id_actionsessionobject : actID      
       };
     //console.log(dataObj);
-    $http.post('/api/v1/actions/deleteaction', dataObj )
+    $http.post('/api/v1/actions/deleteactionobject', dataObj )
         .success(function(data){
           $scope.selectedactions = data;
         })
@@ -227,7 +256,58 @@ app.controller('actionsController', function($scope, $location, $route, $routePa
           console.log('Error: ' + error);
         });
 
-  };//end log
+  };//end delete
+
+  $scope.updateNotes=function(actSessObjID){
+        
+        //alert()
+
+        const dataObj = {
+        notes : $scope.fNotes[actSessObjID],
+        id_actionsessionobject : actSessObjID      
+      };
+      //console.log(dataObj);
+        //update action session object with notes
+      $http.post('/api/v1/actions/updatenotes', dataObj )
+        .success(function(data){
+          //$scope.selectedactions = data;
+          //console.log(data);
+              $http.post('/api/v1/actions/getnotebyid', dataObj )
+            .success(function(data){
+              //$scope.selectedactions = data;
+              console.log(data)
+              $scope.fNotes[actSessObjID] = data.notes;
+            })
+            .error((error) => {
+              console.log('Error: ' + error);
+           });
+        })
+        .error((error) => {
+          console.log('Error: ' + error);
+        });
+
+  }; //end update note
+
+  $scope.getNote=function(actSessObjID){
+        
+        //alert()
+
+        const dataObj = {
+        id_actionsessionobject : actSessObjID      
+      };
+      //console.log(dataObj);
+        //get note 
+      $http.post('/api/v1/actions/getnotebyid', dataObj )
+        .success(function(data){
+          //$scope.selectedactions = data;
+          console.log(data)
+          $scope.fNotes[actSessObjID] = data.notes;
+        })
+        .error((error) => {
+          console.log('Error: ' + error);
+        });
+
+  }; //end get name
   
 });
 
@@ -563,4 +643,97 @@ app.controller('manageSourcesController', function($scope, $location, $routePara
     });
     $location.path('/');
     };
+}); //end controller
+
+app.controller('actionsessionController', function($scope, $location, $routeParams, $http) {
+  $scope.addedActions = {};
+  $scope.actionData = {};
+  $scope.sessionid = $routeParams.id;
+  //get all actions
+  $http.get('/api/v1/actions/all')
+  .success(function(objs){
+    $scope.actionData = objs;
+  })
+  .error(function(error){
+    console.log('Error: ' + error);
+  });
+
+
+  var dataObj = {
+        id_session : $scope.sessionid,
+    };
+  //get all actions per session
+  $http.post('/api/v1/actions/allactionssession/', dataObj)
+  .success(function(actionspersession){
+    $scope.addedActions = actionspersession;
+    console.log(actionspersession);
+  })
+  .error(function(error){
+    console.log('Error: ' + error);
+  });
+
+// associate selected actions per session
+  $scope.addActionToSession = function(actionId, actionName){
+    console.log(actionId);
+   
+    var dataObj = {
+        id_session : parseInt($scope.sessionid),
+        id_action : actionId,
+        action_name: actionName
+    };
+
+    
+    $http.post('/api/v1/actions/actionsessionexists', dataObj )
+    .success(function(data){ 
+      if(data==0){
+       
+        $http.post('/api/v1/actions/addactiontothissession', dataObj )
+        .success(function(data2){
+          
+          $scope.addedActions = data2;
+           console.log(data2);
+        })
+        .error((error) => {
+          console.log('Error: ' + error);
+        }); 
+       }//end if
+
+       else{
+        window.alert("This action was already added to the session");
+       }
+    })
+    .error((error) => {
+      console.log('Error: ' + error);
+    });   
+
+    };//end scope
+
+
+    $scope.deleteActionSession = function(actsessionID){
+    
+    const dataObj = {
+        id_session : $scope.sessionid,
+        id_actionsession : actsessionID
+      };
+    //console.log(dataObj);
+    $http.post('/api/v1/actions/deleteactionsession', dataObj )
+        .success(function(data){
+          $scope.addedActions = data;
+          console.log(data);
+        })
+        .error((error) => {
+          console.log('Error: ' + error);
+        });
+
+  };//end log
+  //redirect to assign Objects to session
+  $scope.assignDataSources = function() {
+    //$location.path('/objects/'+$scope.sessionid);
+    $location.path('/media/'+$scope.sessionid);
+  };
+  // //redirect to assign Objects to session
+  // $scope.assignObjects = function() {
+  //   $location.path('/objects/'+$scope.sessionid);
+  // };
+
 }); //end controller
