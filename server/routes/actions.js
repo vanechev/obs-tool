@@ -243,7 +243,7 @@ router.post('/addactiontothissession', (req, res, next) => {
   con.query('INSERT INTO action_session SET ?', action_string, (err, result) => {
   if(err) throw err;
     console.log(`Inserted ${result.affectedRows} row(s)`);
-    const query_string2 = 'SELECT action_session.id, action_session.action_desc, action_session.id_action FROM action_session where action_session.id_session = ? order by action_session.id ASC;';
+    const query_string2 = 'SELECT action_session.id, action_session.id_action, action_session.action_desc, actions.action_type FROM action_session, actions WHERE action_session.id_action=actions.id AND (actions.action_type = "event" OR actions.action_type = "critical") AND action_session.id_session = ? order by action_session.action_desc ASC;';
     con.query(query_string2,[req.body.id_session], (err,rows) => {
       if(err) throw err;
       rows.forEach( (row) => {
@@ -267,7 +267,7 @@ router.post('/deleteactionsession', (req, res, next) => {
       if(err) throw err;
       console.log(`Deleted ${result.affectedRows} row(s)`);
 
-      const query_string2 = 'SELECT action_session.id, action_session.action_desc, action_session.id_action FROM action_session where action_session.id_session = ? order by action_session.id ASC;';
+      const query_string2 = 'SELECT action_session.id, action_session.id_action, action_session.action_desc, actions.action_type FROM action_session, actions WHERE action_session.id_action=actions.id AND (actions.action_type = "event" OR actions.action_type = "critical") AND action_session.id_session = ? order by action_session.action_desc ASC;';
         con.query(query_string2,[req.body.id_session], (err,rows) => {
         if(err) throw err;
 
@@ -337,17 +337,18 @@ router.get('/getactionobjects/:id_session', (req, res, next) => {
     //return res.json(JSON.parse(results));
 });
 
-//delete actions with objects associated
+//delete actions
+//added 01-05-2019
 router.post('/deleteaction', (req, res, next) => {
     const results = [];
     
-    const query_string1 = 'DELETE FROM action_session WHERE action_session.id = ?'
+    const query_string1 = 'DELETE FROM actions WHERE actions.id = ?'
     con.query(query_string1, 
     [req.body.id_action], (err, result) => {
       if(err) throw err;
       console.log(`Deleted ${result.affectedRows} row(s)`);
 
-      const query_string2 = 'SELECT action_session.id, action_session.action_desc, action_session.id_object, action_session.time_action, object_session.name FROM action_session, object_session where action_session.id_object=object_session.id and action_session.id_session=object_session.id_session and action_session.id_session = ? order by action_session.id DESC;';
+      const query_string2 = 'SELECT * FROM actions WHERE action_type = "event" OR action_type = "critical" ORDER BY name ASC;';
         con.query(query_string2,[req.body.id_session], (err,rows) => {
         if(err) throw err;
 

@@ -788,8 +788,8 @@ div.vis-network div.vis-navigation div.vis-button.vis-zoomExtends {
   width: 1px;
   cursor: move;
   z-index: 1;
-  border-left: 2px dashed;
-  border-left-color: #ef4c6d;
+  border: 1px solid;
+  border-color: #ef4c6d;
 }
 
 .vis-panel.vis-background.vis-horizontal .vis-grid.vis-horizontal {

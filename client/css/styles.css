@@ -59,7 +59,7 @@ body {
     }
 
 .vis-item.critical {
-      background-color: transparent;
+      background-color: white;
       border-color: none;
       border-width: 0px;
     }
@@ -73,6 +73,11 @@ body {
     }
 
 .vis-item.vis-dot.action.student {
+      border-color: #30cbea;
+      
+    }
+
+.vis-item.vis-dot.action.rn {
       border-color: #30cbea;
       
     }
@@ -131,11 +136,15 @@ body {
 }
 
 .special-time{
-  background-color: #ffffff;
+  background-color: white !important;
   border-color: #ffffff;
   font-weight: 500;
 }
     div.vis-item-content{
       margin-left: none;
     }}
+}
+
+.vis-label{
+  width: 60px !important;
 }

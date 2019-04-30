@@ -155,6 +155,56 @@ router.post('/updateSourceSession', (req, res, next) => {
 
 });
 
+//delete actions with objects associated
+//added 24-04-2019
+router.post('/deletesourcesession', (req, res, next) => {
+    const results = [];
+    
+    const query_string1 = 'DELETE FROM datatype_session WHERE datatype_session.id_datatype = ? AND datatype_session.id_session_datatype = ? AND datatype_session.id_session = ? '
+    con.query(query_string1, 
+    [req.body.id_datatype,req.body.id_session_datatype,req.body.id_session], (err, result) => {
+      if(err) throw err;
+      console.log(`Deleted ${result.affectedRows} row(s)`);
 
+      const query_string2 = 'SELECT * FROM datatype_session WHERE id_session = ? ORDER BY id_datatype ASC';
+        con.query(query_string2,[req.body.id_session], (err,rows) => {
+        if(err) throw err;
+
+            rows.forEach( (row) => {
+            results.push(row);
+            //console.log(`${row.name} started at ${row.time_start}`);
+            });
+        return res.json(results);
+        });
+     });
+});
+
+//update empatica serial with data source
+//added 1-05-2019
+router.post('/updateempatica', (req, res, next) => {
+  const results = [];
+  // Get a Postgres client from the connection pool
+  con.connect(function(err){});
+    // Handle connection errors
+    // SQL Query > Select Data
+      var string_query = 'UPDATE datatype_session SET id_empatica = ? WHERE id_session = ? AND id_datatype = ? AND id_session_datatype = ? ';
+      var session_vars = [req.body.serial, req.body.id_session, req.body.id_datatype, req.body.id_session_datatype];
+      con.query(string_query, session_vars, (err, result) => {
+        if (err) throw err;
+        console.log(`Changed ${result.changedRows} row(s)`);
+
+            con.query('SELECT * FROM datatype_session WHERE id_session = ? ORDER BY id_datatype ASC', [req.body.id_session], (err, rows) => {
+            if(err) throw err;
+
+            rows.forEach( (row) => {
+            results.push(row);
+            //console.log(`${row.id_session} , ${row.id_datatype}`);
+            });
+            //console.log(results);
+            return res.json(results);
+          });
+      });
+
+});
 
 module.exports = router;

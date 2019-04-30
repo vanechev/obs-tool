@@ -56,7 +56,7 @@ router.post('/generateJson2', (req, res, next) => {
             participants[data[i].name] = [];
           }
         }
-
+  console.log(participants);
   for (x in participants) {nparticipants++;}
 
 alldata["n"] = nparticipants;
@@ -100,7 +100,7 @@ alldata["criticalTs"] = [];
 
                       var critical_item = {};
                       //time_from_start = data[i].duration.split(":").slice(-2).join(":").split(".")[0];
-                      critical_item["id"] = participants["patient1"].length+1;
+                      critical_item["id"] = participants["PTN"].length+1;
                       critical_item["group"] = data[i].id_object;
                       critical_item["action"] = data[i].action_desc;
                       critical_item["start"] = data[i].time_action;
@@ -108,12 +108,12 @@ alldata["criticalTs"] = [];
                       critical_item["className"] = "critical";
                      
                       //if(data[i].action_desc.split(" ")[0] == "Ask"){
-                        critical_item["content"] = '<div class="special-time">'+moment(data[i].duration,"hh:mm:ss.SSS").format("mm:ss")+'</div><img src="../../../img/ask.png" style="width: 136px; height: 112px;">';
+                        critical_item["content"] = '<img src="../../../img/warning.png" style="width: 40px; height: 40px;"><div class="special-time">'+moment(data[i].duration,"hh:mm:ss.SSS").format("mm:ss")+'</div><div id="text">'+data[i].action_desc+'</div>';
                       //  }
                       //else if(data[i].action_desc.split(" ")[0] == "Lose"){
                       //  critical_item["content"] = '<div class="special-time">'+time_from_start+'</div><img src="../../../img/lose.png" style="width: 136px; height: 112px;">';
                       //  }
-                      participants["patient1"].push(critical_item);
+                      participants["PTN"].push(critical_item);
                     }
 
              else {

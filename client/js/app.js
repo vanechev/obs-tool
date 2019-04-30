@@ -164,7 +164,7 @@ app.controller('sessionController', function($scope, $location, $routeParams, $h
 
 });
 
-app.controller('actionsController', function($scope, $location, $route, $routeParams, $http, socket) {
+app.controller('actionsController', function($window, $scope, $location, $route, $routeParams, $http, socket) {
   $scope.actionData = {};
   $scope.objectData = {};
   $scope.selectedactions = {}
@@ -313,12 +313,39 @@ app.controller('actionsController', function($scope, $location, $route, $routePa
         });
 
   }; //end get name
+
+//draw timeline
+  $scope.redirectTimeline = function(sessionID) {
+    
+    //$location.path('/timeline/'+sessionID);
+    var dataObj = {
+        id_session : sessionID
+    };
+    $http.post('/api/v1/visualisations/getDataforVis',dataObj)
+      .success(function(data){
+        console.log(data);
+          $http.post('/api/v1/visualisations/generateJson2', data)
+          .success(function(objs){
+              //$scope.nparticipants = objs.n; 
+            //$scope.selectedactions = objs;
+            console.log('http://localhost:3000/timeline/'+sessionID);
+            $window.location.href='http://localhost:3000/timeline/'+sessionID;
+          })
+          .error(function(error){
+            console.log('Error: ' + error);
+          });
+      })
+      .error(function(error){
+        console.log('Error: ' + error);
+      });
+  };//end function
   
-});
+});//end controller
 
 app.controller('mediaController', function($scope, $location, $routeParams, $http) {
   $scope.sourceSession = {};
   $scope.sourceData = {};
+  $scope.trackers_empatica = {};
   $scope.sessionid = $routeParams.id;
   // Get all sessions
   $http.get('/api/v1/media/all')
@@ -336,6 +363,16 @@ app.controller('mediaController', function($scope, $location, $routeParams, $htt
   .error(function(error){
     console.log('Error: ' + error);
   });
+
+//get all trackers=empatica serials
+  $http.get('/api/v1/objects/trackers/'+'empatica')
+    .success(function(tracker){
+      $scope.trackers_empatica = tracker;
+      //console.log($scope.trackers_empatica);
+    })
+    .error(function(error){
+      console.log('Error: ' + error);
+    });
 
 // add source media to database
   $scope.addSourceMedia = function(sourceId, sourceName){
@@ -383,6 +420,45 @@ app.controller('mediaController', function($scope, $location, $routeParams, $htt
     $location.path('/objects/'+$scope.sessionid);
   };
 
+  //added 30-04-2019
+  $scope.deleteSourceSession = function(datatypeID, sessionDatatypeID){
+    
+    const dataObj = {
+        id_session : $scope.sessionid,
+        id_datatype : datatypeID,
+        id_session_datatype: sessionDatatypeID
+      };
+    //console.log(dataObj);
+    $http.post('/api/v1/media/deletesourcesession', dataObj )
+        .success(function(data){
+          $scope.sourceSession = data;
+          //console.log(data);
+        })
+        .error((error) => {
+          console.log('Error: ' + error);
+        });
+
+  };//end log
+
+  $scope.updateWristbandDatatypeSession = function(sessionDatatypeID,item){
+    //alert(item);
+    var dataObj = {
+        id_session : $scope.sessionid,
+        id_datatype : 3,
+        id_session_datatype : sessionDatatypeID,
+        serial : item
+    };
+
+     $http.post('/api/v1/media/updateempatica', dataObj )
+        .success(function(data){
+        //$scope.objectsperSessionData = data;
+        })
+        .error((error) => {
+          console.log('Error: ' + error);
+        });
+
+  };//end updatewristband
+
 }); //end controller
 
 app.controller('objectsController', function($scope, $location, $routeParams, $http) {
@@ -391,6 +467,7 @@ app.controller('objectsController', function($scope, $location, $routeParams, $h
   $scope.trackers_pozyx = {};
   $scope.trackers_empatica = {};
   $scope.sessionid = $routeParams.id;
+  $scope.fObjectName = [];
   // Get all objects
   $http.get('/api/v1/objects/all')
   .success(function(data){
@@ -410,7 +487,11 @@ app.controller('objectsController', function($scope, $location, $routeParams, $h
   });
 
   //get all trackers=pozyx serials
-  $http.get('/api/v1/objects/trackers/'+'pozyx')
+   var dataObj = {
+        id_session : $scope.sessionid,
+        type : 'pozyx'
+    };
+  $http.post('/api/v1/objects/trackers/', dataObj)
     .success(function(tracker){
       $scope.trackers_pozyx = tracker;
       //console.log($scope.trackers_pozyx);
@@ -420,7 +501,11 @@ app.controller('objectsController', function($scope, $location, $routeParams, $h
     });
 
 //get all trackers=empatica serials
-  $http.get('/api/v1/objects/trackers/'+'empatica')
+  var dataObj = {
+        id_session : $scope.sessionid,
+        type : 'empatica'
+    };
+  $http.post('/api/v1/objects/trackers/',dataObj)
     .success(function(tracker){
       $scope.trackers_empatica = tracker;
       //console.log($scope.trackers_empatica);
@@ -493,6 +578,44 @@ app.controller('objectsController', function($scope, $location, $routeParams, $h
         });
 
   };//end updatewristband
+
+//added 30-04-2019
+$scope.updateObjectName = function(objsId){
+    //alert(item);
+    var dataObj = {
+        id_session : $scope.sessionid,
+        id_objsession : objsId,
+        newname: $scope.fObjectName[objsId]
+      };
+
+     $http.post('/api/v1/objects/updateobjname', dataObj )
+        .success(function(data){
+        $scope.objectsperSessionData = data;
+        })
+        .error((error) => {
+          console.log('Error: ' + error);
+        });
+
+  };//end updateObjectName
+
+//added 30-04-2019
+  $scope.deleteObjectSession = function(objSessID){
+    
+    const dataObj = {
+        id_session : $scope.sessionid,
+        id_objectsession : objSessID
+      };
+    //console.log(dataObj);
+    $http.post('/api/v1/objects/deleteobjectsession', dataObj )
+        .success(function(data){
+          $scope.objectsperSessionData = data;
+          //console.log(data);
+        })
+        .error((error) => {
+          console.log('Error: ' + error);
+        });
+
+  };//end log
 
 
   $scope.controlSources = function() {
@@ -648,6 +771,7 @@ app.controller('manageSourcesController', function($scope, $location, $routePara
     });
     $location.path('/');
     };
+
 }); //end controller
 
 app.controller('actionsessionController', function($scope, $location, $routeParams, $http) {
@@ -740,6 +864,23 @@ app.controller('actionsessionController', function($scope, $location, $routePara
 
     };//end scope
 
+    //added 1-05-2019
+     $scope.deleteAction = function(actID){
+    
+    const dataObj = {
+        id_session : $scope.sessionid,
+        id_action : actID      
+      };
+    //console.log(dataObj);
+    $http.post('/api/v1/actions/deleteaction', dataObj )
+        .success(function(data){
+          $scope.actionData = data;
+        })
+        .error((error) => {
+          console.log('Error: ' + error);
+        });
+
+  };//end delete
 
     $scope.deleteActionSession = function(actsessionID){
     
