@@ -71,6 +71,11 @@ app.controller('mainController', function($window, $scope, $location, $routePara
     $location.path('/objects/'+sessionID);
   };
 
+  $scope.redirectActionstoSession = function(sessionID) {
+
+    $location.path('/actions/'+sessionID);
+  };
+
   $scope.redirectCapture = function(sessionID) {
 
     $location.path('/manage/'+sessionID);
@@ -85,7 +90,7 @@ app.controller('mainController', function($window, $scope, $location, $routePara
     $http.post('/api/v1/visualisations/getDataforVis',dataObj)
       .success(function(data){
         console.log(data);
-          $http.post('/api/v1/visualisations/generateJson', data)
+          $http.post('/api/v1/visualisations/generateJson2', data)
           .success(function(objs){
               //$scope.nparticipants = objs.n; 
             //$scope.selectedactions = objs;
@@ -649,10 +654,37 @@ app.controller('actionsessionController', function($scope, $location, $routePara
   $scope.addedActions = {};
   $scope.actionData = {};
   $scope.sessionid = $routeParams.id;
+  $scope.IsVisible = false;
+  $scope.inputActionName = '';
+
+  //function to show input
+  $scope.ShowInput = function(){
+            $scope.IsVisible = $scope.IsVisible = true;
+        }
+  //function to add a new action to the list
+  $scope.AddNewAction = function(){
+    const dataObj = {
+    newactionname: $scope.inputActionName
+    };
+    //insert new action
+    $http.post('/api/v1/actions/newaction/', dataObj)
+    .success(function(allactions){
+      $scope.actionData = allactions;
+      $scope.IsVisible = false;
+      $scope.inputActionName = '';
+      console.log(allactions);
+    })
+    .error(function(error){
+      console.log('Error: ' + error);
+    });
+  }
+  
+
   //get all actions
   $http.get('/api/v1/actions/all')
   .success(function(objs){
     $scope.actionData = objs;
+    console.log(objs);
   })
   .error(function(error){
     console.log('Error: ' + error);

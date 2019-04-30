@@ -37,10 +37,11 @@
                     <span class="text-secondary font-weight-light"> Start: {{ todo.time_start | date:'medium' }}</span> <span class="text-secondary font-weight-light"> End: {{ todo.time_end | date:'medium' }}</span>
                   </div>
                   <div class=""><a href="javascript:void(0)" class="btn btn-primary btn-sm" ng-click="listActions(todo.id)"> Log Actions </a></div>
-                  <div class=""><a href="javascript:void(0)" class="mx-2 btn btn-success btn-sm" ng-click="redirectSources(todo.id)"> Sources </a></div>
+                  <div class=""><a href="javascript:void(0)" class="mx-2 btn btn-info btn-sm" ng-click="redirectSources(todo.id)"> Sources </a></div>
                   <div class=""><a href="javascript:void(0)" class="mx-2 btn btn-info btn-sm" ng-click="redirectObjects(todo.id)"> Objects </a></div>
-                  <div class=""><a href="javascript:void(0)" class="mx-2 btn btn-warning btn-sm" ng-click="redirectCapture(todo.id)"> Capture </a></div>
-                  <div class=""><a href="javascript:void(0)" class="mx-2 btn btn-secondary btn-sm" ng-click="redirectTimeline(todo.id)"> Timeline </a></div>
+                  <div class=""><a href="javascript:void(0)" class=" mx-2 btn btn-info btn-sm" ng-click="redirectActionstoSession(todo.id)"> Actions </a></div>
+                  <div class=""><a href="javascript:void(0)" class="mx-2 btn btn-info btn-sm" ng-click="redirectCapture(todo.id)"> Capture </a></div>
+                  <div class=""><a href="javascript:void(0)" class="mx-2 btn btn-warning btn-sm" ng-click="redirectTimeline(todo.id)"> Timeline </a></div>
 
               </div>
             </div>
@@ -64,10 +65,13 @@
         <div class="p-2"><span><a href="javascript:void(0)" class="btn btn-success btn-sm" ng-click="logStartStopActionSession(8,'Session started')"> Start Session </a></span></div>
         <div class="p-2"><span><a href="javascript:void(0)" class="btn btn-danger btn-sm" ng-click="logStartStopActionSession(9,'Session ended')"> Stop Session </a></span></div>
       </div>
+
       <div class="my-3 p-3 bg-white rounded box-shadow">
             <div class="pb-2 pt-2 mb-0 small lh-125 border-bottom border-gray" ng-repeat="actionsess in actionData">
               <div class="d-flex justify-content-sm-between align-items-center w-100">
-             <div>{{ actionsess.action_desc }} </div>
+             <div>{{ actionsess.action_desc }} 
+                   <div ng-show = "actionsess.action_type == 'critical'" ng-class="{'badge badge-warning': actionsess.action_type == 'critical'}">critical</div> 
+             </div>
               <div><button type="button" ng-repeat="object in objectData" class="btn btn-outline-primary btn-sm mx-1" 
                     role="button" ng-click="logActionObject(object.id,actionsess.id,actionsess.id_action,actionsess.action_desc)"> {{ object.name }}</button> </div>
               </div>
@@ -76,17 +80,19 @@
 
       <div class="my-3 p-3 bg-white rounded box-shadow">
             <div class="pb-2 pt-2 mb-0 small lh-125 border-bottom border-gray" ng-repeat="sel in selectedactions track by sel.id">
-              <div class="d-flex align-items-between w-100">
-                 <div class="p-2 flex-grow-1">{{ sel.action_desc }} 
+              <div class="d-flex justify-content-between">
+                 <div class="p-2 mr-auto">{{ sel.action_desc }} 
+                  <div ng-show = "sel.action_type == 'critical'" ng-class="{'badge badge-warning': sel.action_type == 'critical'}">critical</div> 
                   <span class="text-secondary font-weight-light"> at: {{ sel.time_action | date:'medium' }}</span>
 
                  </div>
                   <div class="p-2">  
-                 <span>Notes: <input type="text" ng-model="fNotes[sel.id]" ng-init="getNote(sel.id)"></span>
-                  </div>
-                  <div class="p-2">  
                     <span class="text-info">  {{ sel.name }} </span> 
                   </div>
+                  <div class="p-2">  
+                 <span>Notes: <input type="text" ng-model="fNotes[sel.id]" ng-init="getNote(sel.id)"></span>
+                  </div>
+                 
                   <div class="p-2"><a href="javascript:void(0)" class="btn btn-outline-warning btn-sm" ng-click="updateNotes(sel.id)"> Save </a></div>
 
                   <div class="p-2"><a href="javascript:void(0)" class="btn btn-outline-danger btn-sm" ng-click="deleteActionObject(sel.id)"> Delete </a></div>
@@ -95,6 +101,10 @@
             </div>
 
         </div>
+        <div class="my-3 p-3 bg-white rounded box-shadow">
+      <button type="submit" class="btn btn-primary btn-lg btn-block" ng-click="redirectTimeline()">Go to Timeline</button>
+          <br>
+      </div>
         
   </main>
 </script>
@@ -132,24 +142,34 @@
         <hr>
         <p class="lead">Add Actions to this Session</p>
       </div>
-      
+       <div class="my-3 p-3 bg-white rounded box-shadow">
+        <div><button type="button" class="btn btn-primary btn-sm" ng-click="ShowInput()"> New Action </button> 
+        </div> 
+        <br/>
       <div class="my-3 p-3 bg-white rounded box-shadow">
+        <div class="pb-2 pt-2 mb-0 small lh-125 border-bottom border-gray" ng-show = "IsVisible">
+          Action: <input type="text"  ng-model="inputActionName">
+          <a href="javascript:void(0)" class="btn btn-outline-warning btn-sm" ng-click="AddNewAction()"> Save </a>
+        </div>
             <div class="pb-2 pt-2 mb-0 small lh-125 border-bottom border-gray" ng-repeat="action in actionData">
               <div class="d-flex justify-content-sm-between align-items-center w-100">
-             <div>{{ action.name }} </div>
+             <div>{{ action.name }}  <div ng-show = "action.action_type == 'critical'" ng-class="{'badge badge-warning': action.action_type == 'critical'}">critical</div> </div>
+            
+
               <div><button type="button" class="btn btn-outline-primary btn-sm mx-1" 
                     role="button" ng-click="addActionToSession(action.id,action.name,action)">  Add </button> 
               </div>
               </div>
             </div>
-
       </div>
 
+      
       <div class="my-3 p-3 bg-white rounded box-shadow">
+        <p class="lead">Selected actions</p>
             <div class="pb-2 pt-2 mb-0 small lh-125 border-bottom border-gray" ng-repeat="sel in addedActions">
               <div class="d-flex align-items-center w-100">
                  <div class="p-2 flex-grow-1">{{ sel.action_desc }} 
-                  
+                  <div ng-show = "sel.action_type == 'critical'" ng-class="{'badge badge-warning': sel.action_type == 'critical'}">critical</div> 
                  </div>
                   <div class="p-2"><a href="javascript:void(0)" class="btn btn-outline-danger btn-sm" ng-click="deleteActionSession(sel.id)"> Delete </a></div>
 
@@ -163,6 +183,8 @@
       </div>
   </main>
 </script>
+
+
 
 <script type="text/ng-template" id="/addMedia.html">
  <nav class="navbar navbar-expand-md navbar-dark bg-dark mb-4">

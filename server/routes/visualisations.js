@@ -3,6 +3,7 @@ const router = express.Router();
 const mysql = require('mysql');
 const path = require('path');
 const fs = require('fs');
+const moment = require('moment');
 
 const con = mysql.createConnection({
   host: 'localhost',
@@ -19,7 +20,7 @@ router.post('/getDataforVis', (req, res, next) => {
   
   con.connect(function(err){});
   // Get mysql client from the connection pool
-  var query_string = 'SELECT action_session.id, action_session.id_session, action_session.id_action, action_session.id_object, action_session.action_desc, action_session.param_value, action_session.duration, object_session.name  FROM action_session left join object_session  on action_session.id_object = object_session.id where action_session.id_session=?';
+  var query_string = 'SELECT session.name as session_name, action_session_object.id_session, objects.name as object_type, actions.action_type, action_session_object.id, action_session_object.action_desc, action_session_object.notes, action_session_object.id_object, action_session_object.time_action, action_session_object.duration, object_session.name FROM action_session_object LEFT JOIN object_session ON action_session_object.id_object=object_session.id AND action_session_object.id_session=object_session.id_session JOIN actions ON action_session_object.id_action = actions.id LEFT JOIN objects ON object_session.id_object = objects.id JOIN session ON action_session_object.id_session = session.id WHERE action_session_object.id_session = ? ORDER BY action_session_object.id ASC;';
   con.query(query_string, [req.body.id_session], (err, rows) => {
   if(err) throw err;
 
@@ -32,6 +33,152 @@ router.post('/getDataforVis', (req, res, next) => {
   });
   
     //return res.json(JSON.parse(results));
+});
+
+//added 30-04-2019
+router.post('/generateJson2', (req, res, next) => {
+  data = req.body;
+  var dateObj = new Date();
+  var month = dateObj.getUTCMonth() + 1; //months from 1-12
+  var day = dateObj.getUTCDate();
+  var year = dateObj.getUTCFullYear();
+
+  newdate = year + "-" + month + "-" + day;
+  var alldata = {};
+  var participants = {};
+  var nparticipants = 0;
+  var CPR_array = [];
+  var sessions_stop = [];
+  var id_session = 0;
+
+  for (var i = 0; i < data.length; i++) {
+          if (data[i].name != null){
+            participants[data[i].name] = [];
+          }
+        }
+
+  for (x in participants) {nparticipants++;}
+
+alldata["n"] = nparticipants;
+alldata["title"] = data[0].session_name;
+//participants["time_start"] = newdate+" 00:00:00";
+alldata["criticalTs"] = [];
+
+        for (var i = 0; i < data.length; i++) {
+          //id_session to generate json file
+          id_session = data[i].id_session;
+
+          //add when the session started
+          if(data[i].action_desc == "Session started"){
+            alldata["time_start"] = data[i].time_action;
+          }
+          //add when the session ended
+          if(data[i].action_desc == "Session ended"){
+            alldata["time_end"] = data[i].time_action;
+          }
+          
+
+          //add actions that were done by a student
+          if(data[i].duration != null && data[i].name != null ){
+            var item = {};
+            //find CPR actions as they have duration
+            if(data[i].action_desc == "Start CPR"){
+              CPR_array.push(data[i]);
+            }
+
+            else if(data[i].action_desc == "Stop CPR"){
+              sessions_stop.push(data[i].id);
+            }
+
+            else {
+                   //add critical items to R1 - they don't have student associated
+                    if(data[i].action_type == "critical"){
+                      var ct = {};
+                      ct["event"] = data[i].action_desc;
+                      ct["when"] = data[i].time_action;
+                      alldata["criticalTs"].push(ct);
+
+                      var critical_item = {};
+                      //time_from_start = data[i].duration.split(":").slice(-2).join(":").split(".")[0];
+                      critical_item["id"] = participants["patient1"].length+1;
+                      critical_item["group"] = data[i].id_object;
+                      critical_item["action"] = data[i].action_desc;
+                      critical_item["start"] = data[i].time_action;
+                      critical_item["type"] = "box";
+                      critical_item["className"] = "critical";
+                     
+                      //if(data[i].action_desc.split(" ")[0] == "Ask"){
+                        critical_item["content"] = '<div class="special-time">'+moment(data[i].duration,"hh:mm:ss.SSS").format("mm:ss")+'</div><img src="../../../img/ask.png" style="width: 136px; height: 112px;">';
+                      //  }
+                      //else if(data[i].action_desc.split(" ")[0] == "Lose"){
+                      //  critical_item["content"] = '<div class="special-time">'+time_from_start+'</div><img src="../../../img/lose.png" style="width: 136px; height: 112px;">';
+                      //  }
+                      participants["patient1"].push(critical_item);
+                    }
+
+             else {
+                  //console.log(data[i].action_desc);
+                  //any other action
+                  //time_from_start = data[i].duration.split(":").slice(-2).join(":").split(".")[0];
+                  item["id"] = participants[data[i].name].length+1;
+                  item["group"] = data[i].id_object;
+                  item["action"] = data[i].action_desc;
+                  item["start"] = data[i].time_action;
+                  item["title"] = data[i].notes;
+                  item["type"] = "box";
+                  if (data[i].action_desc == "Deliver Shock"){
+                    item["className"] = "action shock "+data[i].object_type.toLowerCase();
+                  }
+                  else{
+                    item["className"] = "action "+data[i].object_type.toLowerCase();
+                  }
+                  
+                  item["content"] = moment(data[i].duration,"hh:mm:ss.SSS").format("mm:ss")+'<div id="text">'+data[i].action_desc+'</div>';
+                  if (data[i].name != null){
+                    participants[data[i].name].push(item);
+                  }
+              }
+            }
+          }
+
+        }//end for
+        //console.log(sessions_stop);
+        // add info from CPR
+        for (var i = 0; i < CPR_array.length; i++) {
+          var id_reg = CPR_array[i].id;
+          var item = {};
+            //time_from_start = CPR_array[i].duration.split(":").slice(-2).join(":").split(".")[0];
+            item["id"] = participants[CPR_array[i].name].length+1;
+            item["group"] = CPR_array[i].id_object;
+            item["start"] = CPR_array[i].time_action;
+            item["align"] = "center";
+            item["className"] = 'cpr';
+            
+            item["content"] = moment(CPR_array[i].duration,"hh:mm:ss.SSS").format("mm:ss")+'<div id="text">Compressions</div>';
+            var nearCPR = closest(id_reg,sessions_stop);
+            sessions_stop = remove_closest(nearCPR,sessions_stop);
+            
+            for(var j=0; j < data.length; j++){
+              if(data[j].action_desc == "Stop CPR" && data[j].id == nearCPR){
+                  item["end"] = data[j].time_action;
+                  item["title"] = diff_minutes(data[j].duration,CPR_array[i].duration)+" mins";
+              }
+            }
+          participants[CPR_array[i].name].push(item);
+          alldata['participants'] = participants;
+          //console.log(item);
+        }
+
+  fs.writeFile("client/data/session_"+id_session+".json", JSON.stringify(alldata), function(err) {
+    if(err) {
+        return console.log(err);
+    }
+
+    console.log("The file was saved!");
+  }); 
+
+  //console.log(participants);
+  return res.json(alldata);
 });
 
 router.post('/generateJson', (req, res, next) => {

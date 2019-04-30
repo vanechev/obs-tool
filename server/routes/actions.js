@@ -7,10 +7,6 @@ const mqtt = require('mqtt');
 const url = require('url');
 var fs = require('fs');
 
-const mqtt_url = url.parse(process.env.CLOUDMQTT_URL || 'mqtt://wfejcfvu:t7Os7ERNBJ0s@m14.cloudmqtt.com:19641');
-//const mqtt_url = url.parse(process.env.CLOUDMQTT_URL || 'mqtt://wpancwwq:JM7WMMC9MqzM@m14.cloudmqtt.com:11474');
-const auth = (mqtt_url.auth || ':').split(':');
-var mqtt_client = [];
 
 const con = mysql.createConnection({
   host: 'localhost',
@@ -24,11 +20,31 @@ router.get('/', (req, res, next) => {
     __dirname, '..', '..', 'client', 'views', 'index.html'));
 });
 
+//insert new actions
+router.post('/newaction', (req, res, next) => {
+  var results = [];
+    var action_string = {name: req.body.newactionname, action_type:"event"};
+  //}
+  
+  con.query('INSERT INTO actions SET ?', action_string, (err, result) => {
+  if(err) throw err;
+    console.log(`Inserted ${result.affectedRows} row(s)`);
+    const query_string2 = 'SELECT * FROM actions WHERE action_type = "event" ORDER BY name ASC;';
+    con.query(query_string2,[req.body.id_session], (err,rows) => {
+      if(err) throw err;
+      rows.forEach( (row) => {
+        results.push(row);
+            //console.log(`${row.name} started at ${row.time_start}`);
+      });
+      return res.json(results);
+    });
+  });
+});
 //get all sessions
 router.get('/all', (req, res, next) => {
   const results = [];
 
-    con.query('SELECT * FROM actions WHERE action_type = "event" ORDER BY name ASC;', (err,rows) => {
+    con.query('SELECT * FROM actions WHERE action_type = "event" OR action_type = "critical" ORDER BY name ASC;', (err,rows) => {
     if(err) throw err;
 
     rows.forEach( (row) => {
@@ -42,7 +58,7 @@ router.get('/all', (req, res, next) => {
 //get all actions sessions
 router.post('/allactionssession', (req, res, next) => {
   const results = [];
-    const query_string = 'SELECT action_session.id, action_session.id_action, action_session.action_desc FROM action_session WHERE action_session.id_session = ? order by action_session.action_desc ASC;';
+    const query_string = 'SELECT action_session.id, action_session.id_action, action_session.action_desc, actions.action_type FROM action_session, actions WHERE action_session.id_action=actions.id AND (actions.action_type = "event" OR actions.action_type = "critical") AND action_session.id_session = ? order by action_session.action_desc ASC;';
     con.query(query_string,[req.body.id_session], (err,rows) => {
     if(err) throw err;
 
@@ -72,7 +88,7 @@ router.post('/allactionswithobjects', (req, res, next) => {
 //get actions with objects associated
 router.post('/actionswithobjects', (req, res, next) => {
   const results = [];
-    const query_string = 'SELECT action_session_object.id, action_session_object.action_desc, action_session_object.notes, action_session_object.id_object, action_session_object.time_action, object_session.name FROM action_session_object, object_session where action_session_object.id_object=object_session.id and action_session_object.id_session=object_session.id_session and action_session_object.id_session = ? order by action_session_object.id DESC;';
+    const query_string = 'SELECT actions.action_type, action_session_object.id, action_session_object.action_desc, action_session_object.notes, action_session_object.id_object, action_session_object.time_action, object_session.name FROM action_session_object LEFT JOIN object_session ON action_session_object.id_object=object_session.id AND action_session_object.id_session=object_session.id_session JOIN actions ON action_session_object.id_action = actions.id WHERE action_session_object.id_session = ? ORDER BY action_session_object.id DESC;';
     con.query(query_string,[req.body.id_session], (err,rows) => {
     if(err) throw err;
 
@@ -146,7 +162,7 @@ router.post('/addactionsectionobject', (req, res, next) => {
   if(err) throw err;
     console.log(`inserted ${result.affectedRows} row(s)`);
    
-    const query_string2 = 'SELECT action_session_object.id, action_session_object.action_desc, action_session_object.notes, action_session_object.id_object, action_session_object.time_action, object_session.name FROM action_session_object, object_session where action_session_object.id_object=object_session.id and action_session_object.id_session=object_session.id_session and action_session_object.id_session = ? order by action_session_object.id DESC;';
+    const query_string2 = 'SELECT actions.action_type, action_session_object.id, action_session_object.action_desc, action_session_object.notes, action_session_object.id_object, action_session_object.time_action, object_session.name FROM action_session_object LEFT JOIN object_session ON action_session_object.id_object=object_session.id AND action_session_object.id_session=object_session.id_session JOIN actions ON action_session_object.id_action = actions.id WHERE action_session_object.id_session = ? ORDER BY action_session_object.id DESC;';
    
     con.query(query_string2,[req.body.id_session], (err,rows) => {
       if(err) throw err;
@@ -170,7 +186,7 @@ router.post('/addstartstopaction', (req, res, next) => {
   if(err) throw err;
     console.log(`inserted ${result.affectedRows} row(s)`);
    
-    const query_string2 = 'SELECT action_session_object.id, action_session_object.action_desc, action_session_object.notes, action_session_object.id_object, action_session_object.time_action, object_session.name FROM action_session_object, object_session WHERE action_session_object.id_object=object_session.id and action_session_object.id_session=object_session.id_session and action_session_object.id_session = ? order by action_session_object.id DESC;';
+    const query_string2 = 'SELECT actions.action_type, action_session_object.id, action_session_object.action_desc, action_session_object.notes, action_session_object.id_object, action_session_object.time_action, object_session.name FROM action_session_object LEFT JOIN object_session ON action_session_object.id_object=object_session.id AND action_session_object.id_session=object_session.id_session JOIN actions ON action_session_object.id_action = actions.id WHERE action_session_object.id_session = ? ORDER BY action_session_object.id DESC;';
    
     con.query(query_string2,[req.body.id_session], (err,rows) => {
       if(err) throw err;
@@ -355,7 +371,7 @@ router.post('/deleteactionobject', (req, res, next) => {
       if(err) throw err;
       console.log(`Deleted ${result.affectedRows} row(s)`);
 
-      const query_string2 = 'SELECT action_session_object.id, action_session_object.notes, action_session_object.action_desc, action_session_object.id_object, action_session_object.time_action, object_session.name FROM action_session_object, object_session where action_session_object.id_object=object_session.id and action_session_object.id_session=object_session.id_session and action_session_object.id_session = ? order by action_session_object.id DESC;';
+      const query_string2 = 'SELECT actions.action_type, action_session_object.id, action_session_object.action_desc, action_session_object.notes, action_session_object.id_object, action_session_object.time_action, object_session.name FROM action_session_object LEFT JOIN object_session ON action_session_object.id_object=object_session.id AND action_session_object.id_session=object_session.id_session JOIN actions ON action_session_object.id_action = actions.id WHERE action_session_object.id_session = ? ORDER BY action_session_object.id DESC;';
         con.query(query_string2,[req.body.id_session], (err,rows) => {
         if(err) throw err;
 

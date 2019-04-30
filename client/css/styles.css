@@ -71,6 +71,11 @@ body {
       text-align: left;
       background-color: #ffffff;
     }
+
+.vis-item.vis-dot.action.student {
+      border-color: #30cbea;
+      
+    }
 .vis-item.vis-dot.action.rn1 {
       border-color: #30cbea;
       

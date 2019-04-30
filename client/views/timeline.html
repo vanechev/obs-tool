@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <title>Timeline | Basic demo</title>
+  <title>Timeline</title>
   <link href="../../../css/vis.css" rel="stylesheet" type="text/css" />
   <link href="../../../css/styles.css" rel="stylesheet" type="text/css" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto|Lato" />
@@ -9,7 +9,7 @@
    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 </head>
 <body>
-<h2><strong>Group 1</strong></h2>
+<h2 id="title-page"><strong>Group 1</strong></h2>
 <div id="header" style="width: 100%; left: 44px; top: 98px; height: 20px;"></div>
 <div id="timelines"></div>
 <div id="loading">loading...</div>
@@ -26,14 +26,18 @@
     data: {'id':id_session},
     success: function (data) {
       // hide the "loading..." message
-      console.log(data);
+      
+      document.getElementById("title-page").innerHTML = data.title;
       document.getElementById('loading').style.display = 'none';
       var critical_times = [];
+      var participants = Object.keys(data.participants).sort();
+      console.log(data);
+      //create containers for each timeline
       for(var i=1;i<=data.n;i++){
-                  container = document.createElement('div');
-                  container.setAttribute("id", "visualization"+i);
-                  wrapper.appendChild(container);
-                }
+        container = document.createElement('div');
+        container.setAttribute("id", "visualization"+i);
+        wrapper.appendChild(container);
+        }
 
                 // Get DOM elements where the Timeline will be attached
                 for(var i=0;i<data.n;i++){
@@ -43,13 +47,14 @@
                 var groups = [];
                 for(var i=0;i<data.n;i++){
                   groups[i] = new vis.DataSet([
-                    {id:(i+1), content:"RN "+(i+1), classname:"rn"+(i+1)}]);
+                    {id:data.participants[participants[i]][0].group, content:participants[i], classname:participants[i]}]);
+                  console.log(groups[i]);
                 }
 
                 var items = [];
                 for(var i=0;i<data.n;i++){
-                  items[i] = new vis.DataSet(data["RN"+(i+1)]);
-                  //items[i].add(data2)
+                  items[i] = new vis.DataSet(data.participants[participants[i]]);
+                  console.log(items[i]);
                 }
 
                 //console.log(items);
