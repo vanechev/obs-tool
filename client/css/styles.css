@@ -1,10 +1,12 @@
 body {
-      font-family:  'Lato', sans-serif;
-      font-size: 16pt;
-      font-style: normal;
+      font-family:  'Lato', sans-serif !important;
+      font-size: 16pt !important;
+      font-style: normal !important;
       font-variant: normal;
     }
-
+.vis-time-response{
+  height: 100% !important;
+}
 .vis-group-line{
     height: 5px;
     background-color: #ced7e4;
@@ -45,6 +47,12 @@ body {
   left: 0px !important;
 }
 
+#layers{
+
+  margin: 20px !important;
+  font-size: 20px;
+}
+
 #text{
   font-family: Calibri, Candara, Segoe, "Segoe UI", Optima, Arial, sans-serif;
   font-size: 16px;
@@ -59,7 +67,7 @@ body {
     }
 
 .vis-item.critical {
-      background-color: white;
+      background-color: transparent;
       border-color: none;
       border-width: 0px;
     }
@@ -69,9 +77,14 @@ body {
 }
 .vis-item.vis-box.action {
       text-align: left;
-      background-color: #ffffff;
+      background-color: transparent;
     }
 
+
+    .vis-item.vis-background.negative {
+      background-color: rgba(255, 193, 7, 0.2);
+    }
+  
 .vis-item.vis-dot.action.student {
       border-color: #30cbea;
       

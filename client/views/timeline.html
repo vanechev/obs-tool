@@ -1,15 +1,28 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <title>Timeline</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1 shrink-to-fit=no">
+   <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  
   <link href="../../../css/vis.css" rel="stylesheet" type="text/css" />
   <link href="../../../css/styles.css" rel="stylesheet" type="text/css" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto|Lato" />
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
+<!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+<style>
+.custom-control-label::before, 
+.custom-control-label::after {
+top: .8rem;
+width: 1.25rem;
+height: 1.25rem;
+}
+</style>
+
   <script src="../../../js/vis.js"></script>
    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-
+<title>Timeline</title>
 </head>
 <body>
   <nav aria-label="breadcrumb">
@@ -22,6 +35,7 @@
 <div id="timelines"></div>
 <div id="loading">loading...</div>
 <script type="text/javascript">
+  var timeline = [];
 	var current_url = window.location.href;
 	var id_session = parseInt(current_url.split("/").slice(-1));
 	var containers = [];
@@ -41,10 +55,10 @@
 
 
       var participants = Object.keys(data.participants).sort();
-      console.log(participants);
+      console.log(data);
       
 
-
+      
       //create containers for each timeline
       for(var i=1;i<=data.n;i++){
         container = document.createElement('div');
@@ -61,14 +75,15 @@
                 for(var i=0;i<data.n;i++){
                   groups[i] = new vis.DataSet([
                     {id:data.participants[participants[i]][0].group, content:participants[i], classname:participants[i]}]);
-                  console.log(groups[i]);
+                  //console.log(groups[i]);
                 }
 
                 var items = [];
                 for(var i=0;i<data.n;i++){
                   items[i] = new vis.DataSet(data.participants[participants[i]]);
-                  console.log(items[i]);
+                  //items[i].add(background_info);
                 }
+                console.log(items);
 
                 //console.log(items);
 
@@ -85,7 +100,7 @@
 
               //Create timelines
               for(var i=0;i<data.n;i++){
-                var timeline = new vis.Timeline(containers[i]);
+                timeline = new vis.Timeline(containers[i]);
                 timeline.setOptions(opt);
                 timeline.setGroups(groups[i]);
                 timeline.setItems(items[i]);
@@ -97,8 +112,8 @@
                 
                 timeline.fit();
               }
-
-              var timeAxisElements = document.getElementsByClassName("vis-text vis-minor");
+        //modify how to present data points and description
+        var timeAxisElements = document.getElementsByClassName("vis-text vis-minor");
 			  ////console.log(timeAxisElements);
 			  for (var i = 0; i < timeAxisElements.length; i++) {
 			    //if(timeAxisElements[i].textContent != "00:00" && timeAxisElements[i].textContent != "00:14" ){
@@ -132,7 +147,9 @@
 			  		}
 			  	}
 			  	//console.log(cln);
-			  }
+			  }//end for
+
+        
 			  ////console.log(x);
     },
     error: function (err) {
@@ -158,10 +175,196 @@
   });
 });
 </script>
+<br>
+<br>
+<p class="lead">Select layers:</p>
+<div id="layers" class="form-check">
+  <input class="form-check-input" type="checkbox" name="layer1" id="time_response" onclick="showTimeResponse()"> time response<br>
+  <input class="form-check-input" type="checkbox" name="layer2" id="errors"> errors<br>
+  <input class="form-check-input" type="checkbox" name="layer3" id="location"> location<br><br>
+</div>
+
+<script type="text/javascript">
+
+  function showTimeResponse(){
+    // Get the checkbox
+      var checkBox = document.getElementById("time_response");
+      
+
+      // If the checkbox is checked, display the output text
+      if (checkBox.checked == true){
+
+        wrapper = document.getElementById('timelines');
+                  while (wrapper.firstChild) {
+                      wrapper.removeChild(wrapper.firstChild);
+                  }
+
+                  var timelines = [];
+                  var current_url = window.location.href;
+                  var id_session = parseInt(current_url.split("/").slice(-1));
+                  var containers = [];
+                  //wrapper = document.getElementById('timelines'); 
+                 // load data via an ajax request. When the data is in, load the timeline
+                  $.ajax({
+                    url: 'http://localhost:3000/api/v1/visualisations/getJsonFromFile',
+                    data: {'id':id_session},
+                    success: function (data) {
+                      // hide the "loading..." message
+                      
+                      document.getElementById("title-page").innerHTML = data.title;
+                      document.getElementById('loading').style.display = 'none';
+                      var critical_times = [];
+
+
+                      var participants = Object.keys(data.participants).sort();
+                      console.log(data);
+                      var background_info = [  
+                                {id: 100, content: '', start: "2019-04-30T08:41:36.000Z", end: "2019-04-30T08:41:57.000Z", type: 'background', className: 'vis-time-response'},
+                                {id: 101, content: '', start: "2019-04-30T08:42:36.000Z", end: "2019-04-30T08:45:03.000Z", type: 'background', className: 'vis-time-response negative'}]
+
+                      
+                      //create containers for each timeline
+                      for(var i=1;i<=data.n;i++){
+                        container = document.createElement('div');
+                        container.setAttribute("id", "visualization"+i);
+                        wrapper.appendChild(container);
+                        }
+
+                                // Get DOM elements where the Timeline will be attached
+                                for(var i=0;i<data.n;i++){
+                                  containers[i] = document.getElementById('visualization'+(i+1));
+                                }
+                                //create groups
+                                var groups = [];
+                                for(var i=0;i<data.n;i++){
+                                  groups[i] = new vis.DataSet([
+                                    {id:data.participants[participants[i]][0].group, content:participants[i], classname:participants[i]}]);
+                                  //console.log(groups[i]);
+                                }
+
+                                var items = [];
+                                for(var i=0;i<data.n;i++){
+                                  items[i] = new vis.DataSet(data.participants[participants[i]]);
+                                  items[i].add(background_info);
+                                }
+                                console.log(items);
+
+                                //console.log(items);
+
+                                // Configuration for the Timeline
+                                var opt = {
+                                  start: data.time_start,
+                                  end: data.time_end,
+                                  //timeAxis: {scale: 'seconds', step: 30},
+                                  //groupOrder: 'content',  // groupOrder can be a property name or a sorting function
+                                  zoomable: false,
+                                  showMajorLabels: false,
+                                  //showMinorLabels: false,
+                                };
+
+                              //Create timelines
+                              for(var i=0;i<data.n;i++){
+                                var timeline = new vis.Timeline(containers[i]);
+                                timeline.setOptions(opt);
+                                timeline.setGroups(groups[i]);
+                                timeline.setItems(items[i]);
+
+
+                                for(var j=0;j<data.criticalTs.length;j++){
+                                  timeline.addCustomTime(data.criticalTs[j].when, 't'+(j+1));
+                                }
+                                
+                                timeline.fit();
+                                timelines.push(timeline);
+                              }
+                        //modify how to present data points and description
+                        var timeAxisElements = document.getElementsByClassName("vis-text vis-minor");
+                        ////console.log(timeAxisElements);
+                        for (var i = 0; i < timeAxisElements.length; i++) {
+                          //if(timeAxisElements[i].textContent != "00:00" && timeAxisElements[i].textContent != "00:14" ){
+                            timeAxisElements[i].style.color = "white";
+                          //}
+                        }
+
+                        for(var i = 1; i <= data.n; i++){
+                          //console.log('visualization'+i);
+                          var div_cpr = document.getElementById('visualization'+i).querySelectorAll(".cpr");
+                          if(div_cpr.length > 0){
+                            var foreground = document.getElementById('visualization'+i).querySelectorAll(".vis-foreground")[0].firstChild;
+                            ////console.log(top);
+                            //iterate over cpr node childs
+                            for (var j = 0; j < div_cpr.length; j++) {
+                            //clone node
+                            var cln = div_cpr[j].cloneNode(true);
+
+                            //get element where the content is
+                            var content = cln.querySelector(".vis-item-content");
+                            content.innerHTML = "";
+                            //add a class
+                            cln.classList.remove("cpr");
+                            cln.classList.add("cpr-axis");
+
+                            //get axis node
+                            var axis = document.getElementById('visualization'+i).querySelectorAll(".vis-axis")[0].firstChild;
+                            //console.log(axis);
+
+                            axis.appendChild(cln);
+                            }
+                          }
+                          //console.log(cln);
+                        }//end for
+
+                         //modify background for time-response
+                          for (var i = 1; i <= data.n; i++) {
+
+                            for(var j = 0; j < background_info.length; j++){
+                              var el = document.getElementById('visualization'+i).querySelectorAll(".vis-time-response")[j];
+                              //console.log(el);
+                              el.remove();
+                              //el.style.height = "100% !important";
+                              var newpos = document.getElementById('visualization'+i).querySelectorAll(".vis-time-axis.vis-background")[0];
+                              console.log(newpos);
+                              newpos.append(el);
+                            }
+                       
+                         }//end first for to modify background
+                        ////console.log(x);
+                    },
+                    error: function (err) {
+                      //console.log('Error', err);
+                      if (err.status === 0) {
+                        alert('Failed to load data/basic.json.\nPlease run this example on a server.');
+                      }
+                      else {
+                        alert('Failed to load data/basic.json.');
+                      }
+                    }
+                  });//end ajax
+
+                        jQuery(function($){
+                        var windowWidth = $(window).width();
+                        var windowHeight = $(window).height();
+
+                        $(window).resize(function() {
+                          if(windowWidth != $(window).width() || windowHeight != $(window).height()) {
+                            location.reload();
+                            return;
+                            }
+                          });
+                        });
+
+
+      } 
+  }//end function showTimeResponse
+   
+</script>
+ <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/moment.js/2.8.4/moment.min.js"></script>
+
 </body>
 
-<script src="http://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
-<script src="http://cdnjs.cloudflare.com/ajax/libs/moment.js/2.8.4/moment.min.js"></script>
 
   <!-- external file containing json object for data -->
 
