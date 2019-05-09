@@ -161,6 +161,7 @@
       <div class="my-3 p-3 bg-white rounded box-shadow">
         <div class="pb-2 pt-2 mb-0 small lh-125 border-bottom border-gray" ng-show = "IsVisible">
           Action: <input type="text"  ng-model="inputActionName">
+           <input type="checkbox" ng-model="inputActionType" value="critical"> critical
           <a href="javascript:void(0)" class="btn btn-outline-warning btn-sm" ng-click="AddNewAction()"> Save </a>
         </div>
             <div class="pb-2 pt-2 mb-0 small lh-125 border-bottom border-gray" ng-repeat="action in actionData">

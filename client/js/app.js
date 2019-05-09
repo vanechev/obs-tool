@@ -780,6 +780,7 @@ app.controller('actionsessionController', function($scope, $location, $routePara
   $scope.sessionid = $routeParams.id;
   $scope.IsVisible = false;
   $scope.inputActionName = '';
+  $scope.inputActionType = false;
 
   //function to show input
   $scope.ShowInput = function(){
@@ -787,16 +788,21 @@ app.controller('actionsessionController', function($scope, $location, $routePara
         }
   //function to add a new action to the list
   $scope.AddNewAction = function(){
-    const dataObj = {
-    newactionname: $scope.inputActionName
-    };
+      var type = 'event';
+      if($scope.inputActionType == true){type='critical'}
+      const dataObjAction = {
+        newactionname: $scope.inputActionName,
+        newactiontype: type
+        };
+    //console.log(dataObjAction);
     //insert new action
-    $http.post('/api/v1/actions/newaction/', dataObj)
+    $http.post('/api/v1/actions/newaction/', dataObjAction)
     .success(function(allactions){
       $scope.actionData = allactions;
       $scope.IsVisible = false;
       $scope.inputActionName = '';
-      console.log(allactions);
+      $scope.inputActionType = false;
+      //console.log(allactions);
     })
     .error(function(error){
       console.log('Error: ' + error);

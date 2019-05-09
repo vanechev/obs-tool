@@ -23,13 +23,13 @@ router.get('/', (req, res, next) => {
 //insert new actions
 router.post('/newaction', (req, res, next) => {
   var results = [];
-    var action_string = {name: req.body.newactionname, action_type:"event"};
+    var action_string = {name: req.body.newactionname, action_type:req.body.newactiontype};
   //}
   
   con.query('INSERT INTO actions SET ?', action_string, (err, result) => {
   if(err) throw err;
     console.log(`Inserted ${result.affectedRows} row(s)`);
-    const query_string2 = 'SELECT * FROM actions WHERE action_type = "event" ORDER BY name ASC;';
+    const query_string2 = 'SELECT * FROM actions WHERE action_type = "event" OR action_type = "critical" ORDER BY name ASC;';
     con.query(query_string2,[req.body.id_session], (err,rows) => {
       if(err) throw err;
       rows.forEach( (row) => {
