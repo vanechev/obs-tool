@@ -88,9 +88,9 @@ app.controller('mainController', function($window, $scope, $location, $routePara
         id_session : sessionID
     };
     $http.post('/api/v1/visualisations/getDataforVis',dataObj)
-      .success(function(data){
-        console.log(data);
-          $http.post('/api/v1/visualisations/generateJson2', data)
+      .success(function(dataActions){
+        console.log(dataActions);
+          $http.post('/api/v1/visualisations/generateJson2', dataActions)
           .success(function(objs){
               //$scope.nparticipants = objs.n; 
             //$scope.selectedactions = objs;

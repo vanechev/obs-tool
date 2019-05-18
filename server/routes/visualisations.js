@@ -28,7 +28,7 @@ router.post('/getDataforVis', (req, res, next) => {
     results.push(row);
     //console.log(`${row.id_session} , ${row.id_datatype}`);
     });
-
+    //console.log(results);
     return res.json(results);
   });
   
@@ -37,7 +37,9 @@ router.post('/getDataforVis', (req, res, next) => {
 
 //added 30-04-2019
 router.post('/generateJson2', (req, res, next) => {
-  data = req.body;
+  dataActions = req.body;
+  //console.log(dataActions);
+
   var dateObj = new Date();
   var month = dateObj.getUTCMonth() + 1; //months from 1-12
   var day = dateObj.getUTCDate();
@@ -50,65 +52,67 @@ router.post('/generateJson2', (req, res, next) => {
   var CPR_array = [];
   var sessions_stop = [];
   var id_session = 0;
+  
 
-  for (var i = 0; i < data.length; i++) {
-          if (data[i].name != null){
-            participants[data[i].name] = [];
+  for (var i = 0; i < dataActions.length; i++) {
+          if (dataActions[i].name != null){
+            participants[dataActions[i].name] = [];
           }
         }
   console.log(participants);
   for (x in participants) {nparticipants++;}
 
 alldata["n"] = nparticipants;
-alldata["title"] = data[0].session_name;
+alldata["title"] = dataActions[0].session_name;
 //participants["time_start"] = newdate+" 00:00:00";
 alldata["criticalTs"] = [];
 
-        for (var i = 0; i < data.length; i++) {
+        for (var i = 0; i < dataActions.length; i++) {
           //id_session to generate json file
-          id_session = data[i].id_session;
+          id_session = dataActions[i].id_session;
 
           //add when the session started
-          if(data[i].action_desc == "Session started"){
-            alldata["time_start"] = data[i].time_action;
+          if(dataActions[i].action_desc == "Session started"){
+            alldata["time_start"] = dataActions[i].time_action;
           }
           //add when the session ended
-          if(data[i].action_desc == "Session ended"){
-            alldata["time_end"] = data[i].time_action;
+          if(dataActions[i].action_desc == "Session ended"){
+            alldata["time_end"] = dataActions[i].time_action;
           }
           
 
           //add actions that were done by a student
-          if(data[i].duration != null && data[i].name != null ){
+          if(dataActions[i].duration != null && dataActions[i].name != null ){
             var item = {};
+                    console.log("aqui "+item)
             //find CPR actions as they have duration
-            if(data[i].action_desc == "Start CPR"){
-              CPR_array.push(data[i]);
+            if(dataActions[i].action_desc == "Start CPR"){
+              CPR_array.push(dataActions[i]);
             }
 
-            else if(data[i].action_desc == "Stop CPR"){
-              sessions_stop.push(data[i].id);
+            else if(dataActions[i].action_desc == "Stop CPR"){
+              sessions_stop.push(dataActions[i].id);
             }
 
             else {
                    //add critical items to R1 - they don't have student associated
-                    if(data[i].action_type == "critical"){
+                    if(dataActions[i].action_type == "critical"){
                       var ct = {};
-                      ct["event"] = data[i].action_desc;
-                      ct["when"] = data[i].time_action;
+                      ct["event"] = dataActions[i].action_desc;
+                      ct["when"] = dataActions[i].time_action;
                       alldata["criticalTs"].push(ct);
 
                       var critical_item = {};
                       //time_from_start = data[i].duration.split(":").slice(-2).join(":").split(".")[0];
                       critical_item["id"] = participants["PTN"].length+1;
-                      critical_item["group"] = data[i].id_object;
-                      critical_item["action"] = data[i].action_desc;
-                      critical_item["start"] = data[i].time_action;
+                      critical_item["group"] = dataActions[i].id_object;
+                      critical_item["action"] = dataActions[i].action_desc;
+                      critical_item["start"] = dataActions[i].time_action;
                       critical_item["type"] = "box";
                       critical_item["className"] = "critical";
                      
                       //if(data[i].action_desc.split(" ")[0] == "Ask"){
-                        critical_item["content"] = '<img src="../../../img/warning.png" style="width: 40px; height: 40px;"><div class="special-time">'+moment(data[i].duration,"hh:mm:ss.SSS").format("mm:ss")+'</div><div id="text">'+data[i].action_desc+'</div>';
+                        critical_item["content"] = '<img src="../../../img/warning.png" style="width: 40px; height: 40px;"><div class="special-time">'+moment(dataActions[i].duration,"hh:mm:ss.SSS").format("mm:ss")+'</div><div id="text">'+dataActions[i].action_desc+'</div>';
                       //  }
                       //else if(data[i].action_desc.split(" ")[0] == "Lose"){
                       //  critical_item["content"] = '<div class="special-time">'+time_from_start+'</div><img src="../../../img/lose.png" style="width: 136px; height: 112px;">';
@@ -119,23 +123,26 @@ alldata["criticalTs"] = [];
              else {
                   //console.log(data[i].action_desc);
                   //any other action
+
                   //time_from_start = data[i].duration.split(":").slice(-2).join(":").split(".")[0];
-                  item["id"] = participants[data[i].name].length+1;
-                  item["group"] = data[i].id_object;
-                  item["action"] = data[i].action_desc;
-                  item["start"] = data[i].time_action;
-                  item["title"] = data[i].notes;
+                  item["id"] = participants[dataActions[i].name].length+1;
+                  item["group"] = dataActions[i].id_object;
+                  item["action"] = dataActions[i].action_desc;
+                  item["start"] = dataActions[i].time_action;
+                  item["title"] = dataActions[i].notes;
                   item["type"] = "box";
-                  if (data[i].action_desc == "Deliver Shock"){
-                    item["className"] = "action shock "+data[i].object_type.toLowerCase();
+                  if (dataActions[i].action_desc == "Deliver Shock"){
+                    item["className"] = "action shock "+dataActions[i].object_type.toLowerCase();
                   }
                   else{
-                    item["className"] = "action "+data[i].object_type.toLowerCase();
+                    item["className"] = "action "+dataActions[i].object_type.toLowerCase();
                   }
                   
-                  item["content"] = moment(data[i].duration,"hh:mm:ss.SSS").format("mm:ss")+'<div id="text">'+data[i].action_desc+'</div>';
-                  if (data[i].name != null){
-                    participants[data[i].name].push(item);
+                  item["content"] = moment(dataActions[i].duration,"hh:mm:ss.SSS").format("mm:ss")+'<div id="text">'+dataActions[i].action_desc+'</div>';
+                  if (dataActions[i].name != null){
+                    //console.log("aqui "+item)
+                    participants[dataActions[i].name].push(item);
+                    //console.log("aqui "+participants)
                   }
               }
             }
@@ -158,16 +165,18 @@ alldata["criticalTs"] = [];
             var nearCPR = closest(id_reg,sessions_stop);
             sessions_stop = remove_closest(nearCPR,sessions_stop);
             
-            for(var j=0; j < data.length; j++){
-              if(data[j].action_desc == "Stop CPR" && data[j].id == nearCPR){
-                  item["end"] = data[j].time_action;
-                  item["title"] = diff_minutes(data[j].duration,CPR_array[i].duration)+" mins";
+            for(var j=0; j < dataActions.length; j++){
+              if(dataActions[j].action_desc == "Stop CPR" && dataActions[j].id == nearCPR){
+                  item["end"] = dataActions[j].time_action;
+                  item["title"] = diff_minutes(dataActions[j].duration,CPR_array[i].duration)+" mins";
               }
             }
           participants[CPR_array[i].name].push(item);
           alldata['participants'] = participants;
-          //console.log(item);
+          
         }
+        alldata['participants'] = participants;
+        console.log(alldata);
 
   fs.writeFile("client/data/session_"+id_session+".json", JSON.stringify(alldata), function(err) {
     if(err) {

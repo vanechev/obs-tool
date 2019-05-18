@@ -1,1 +1,1 @@
-{"n":0,"title":"test","criticalTs":[],"time_start":"2019-05-07T07:29:48.000Z"}
+{"n":1,"title":"test","criticalTs":[{"event":"Welcome nurse","when":"2019-05-09T09:01:59.000Z"},{"event":"Small talk","when":"2019-05-09T09:04:00.000Z"},{"event":"Patient becomes irritable","when":"2019-05-09T09:06:47.000Z"},{"event":"Patient increasing irritability","when":"2019-05-09T09:07:53.000Z"},{"event":"Wife cup of tea","when":"2019-05-09T09:08:53.000Z"}],"time_start":"2019-05-09T09:01:37.000Z","time_end":"2019-05-09T09:09:39.000Z"}
