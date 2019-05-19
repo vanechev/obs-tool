@@ -96,7 +96,7 @@ alldata["criticalTs"] = [];
 
             else {
                    //add critical items to R1 - they don't have student associated
-                    if(dataActions[i].action_type == "critical"){
+                    if(dataActions[i].action_type == "critical" && dataActions[i].name == "PTN"){
                       var ct = {};
                       ct["event"] = dataActions[i].action_desc;
                       ct["when"] = dataActions[i].time_action;
