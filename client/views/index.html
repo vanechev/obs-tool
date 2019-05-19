@@ -282,12 +282,12 @@
 
       <div class="my-3 p-3 bg-white rounded box-shadow">
         <div class="alert alert-warning" role="alert">
-          Please, edit the names to make it only three characters. Click on "Change" to save new name.
+          Please, edit ALL the labels to make them three characters. Click on "Change" to save each new label.
         </div>
 
       <div class="alert alert-danger" role="alert">
-        Do not edit the name of the patient (PTN)!
-      </div>
+        Edit the label of the patient to PTN (remove character '1').
+              </div>
             <div class="pb-2 pt-2 mb-0 small lh-125 border-bottom border-gray" ng-repeat="item in objectsperSessionData">
               <div class="d-flex justify-content-sm-between align-items-center w-100">
                 <div class="flex-fill"><span><input type="text" ng-model="fObjectName[item.id]" ng-init="fObjectName[item.id]=item.name"></span>
