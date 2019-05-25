@@ -92,10 +92,26 @@ app.controller('mainController', function($window, $scope, $location, $routePara
         console.log(dataActions);
           $http.post('/api/v1/visualisations/generateJson2', dataActions)
           .success(function(objs){
-              //$scope.nparticipants = objs.n; 
-            //$scope.selectedactions = objs;
-            console.log('http://localhost:3000/timeline/'+sessionID);
-            $window.location.href='http://localhost:3000/timeline/'+sessionID;
+            
+              $http.post('/api/v1/visualisations/getArousalData', dataObj)
+              .success(function(dataActions2){
+        
+                $http.post('/api/v1/visualisations/generateJsonArousalData', dataActions2)
+                .success(function(objs){
+                   console.log('http://localhost:3000/timeline/'+sessionID);
+                    $window.location.href='http://localhost:3000/timeline/'+sessionID;
+
+                })
+                .error(function(error){
+                  console.log('Error: ' + error);
+                });   
+               
+              })
+              .error(function(error){
+                console.log('Error: ' + error);
+              });
+            //console.log('http://localhost:3000/timeline/'+sessionID);
+            //$window.location.href='http://localhost:3000/timeline/'+sessionID;
           })
           .error(function(error){
             console.log('Error: ' + error);

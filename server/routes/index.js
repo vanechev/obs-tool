@@ -17,6 +17,16 @@ router.get('/timeline/:id', (req, res, next) => {
     __dirname, '..', '..', 'client', 'views', 'timeline.html'), options);
 });
 
+router.get('/arousal/:id', (req, res, next) => {
+  var options = {
+    headers: {
+        'id_session': req.params.id
+    }
+  };
+  res.sendFile(path.join(
+    __dirname, '..', '..', 'client', 'views', 'arousal_timeline.html'), options);
+});
+
 router.get('/proxies/:id', (req, res, next) => {
   var options = {
     headers: {

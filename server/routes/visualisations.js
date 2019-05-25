@@ -9,12 +9,49 @@ const con = mysql.createConnection({
   host: 'localhost',
   user: 'root',
   password: '',
-  database: 'group_analytics'
+  database: 'group_analyticsV2'
 });
 
 
 //insert source in session
 router.post('/getDataforVis', (req, res, next) => {
+  var results = [];
+  const id_session = req.body.id_session;
+  
+  con.connect(function(err){});
+  // Get mysql client from the connection pool
+  var query_string = 'SELECT session.name as session_name, action_session_object.id_session, objects.name as object_type, actions.action_type, action_session_object.id, action_session_object.action_desc, action_session_object.notes, action_session_object.id_object, action_session_object.time_action, action_session_object.duration, object_session.name FROM action_session_object LEFT JOIN object_session ON action_session_object.id_object=object_session.id AND action_session_object.id_session=object_session.id_session JOIN actions ON action_session_object.id_action = actions.id LEFT JOIN objects ON object_session.id_object = objects.id JOIN session ON action_session_object.id_session = session.id WHERE action_session_object.id_session = ? AND actions.action_type NOT IN ("arousal") ORDER BY action_session_object.id ASC;';
+  con.query(query_string, [req.body.id_session], (err, rows) => {
+  if(err) throw err;
+
+  rows.forEach( (row) => {
+    results.push(row);
+    //console.log(`${row.id_session} , ${row.id_datatype}`);
+    });
+    //console.log(results);
+    return res.json(results);
+  });
+  
+    //return res.json(JSON.parse(results));
+});
+
+//save arousal states into session
+router.post('/saveArousalState', (req, res, next) => {
+  var results = [];
+  console.log(req.body.id_session);  
+  var q_string = {id_session: req.body.id_session, id_action:43, id_object:req.body.person, action_desc:'Arousal state', time_action:req.body.arousal_time};
+  //}
+  
+  con.query('INSERT INTO action_session_object SET ?', q_string, (err, result) => {
+  if(err) throw err;
+    console.log(`Inserted ${result.affectedRows} row(s)`);
+    return res.json(1);
+  });//end query
+
+});
+
+//insert source in session
+router.post('/getArousalData', (req, res, next) => {
   var results = [];
   const id_session = req.body.id_session;
   
@@ -112,7 +149,7 @@ alldata["criticalTs"] = [];
                       critical_item["className"] = "critical";
                      
                       //if(data[i].action_desc.split(" ")[0] == "Ask"){
-                        critical_item["content"] = '<img src="../../../img/warning.png" style="width: 40px; height: 40px;"><div class="special-time">'+moment(dataActions[i].duration,"hh:mm:ss.SSS").format("mm:ss")+'</div><div id="text">'+dataActions[i].action_desc+'</div>';
+                        critical_item["content"] = '<img src="../../../img/warning.png" style="width: 40px; height: 40px;"><div class="special-time">'+moment(dataActions[i].duration,"hh:mm:ss.SSS").format("HH:mm:ss")+'</div><div id="text">'+dataActions[i].action_desc+'</div>';
                       //  }
                       //else if(data[i].action_desc.split(" ")[0] == "Lose"){
                       //  critical_item["content"] = '<div class="special-time">'+time_from_start+'</div><img src="../../../img/lose.png" style="width: 136px; height: 112px;">';
@@ -138,7 +175,7 @@ alldata["criticalTs"] = [];
                     item["className"] = "action "+dataActions[i].object_type.toLowerCase();
                   }
                   
-                  item["content"] = moment(dataActions[i].duration,"hh:mm:ss.SSS").format("mm:ss")+'<div id="text">'+dataActions[i].action_desc+'</div>';
+                  item["content"] = moment(dataActions[i].duration,"hh:mm:ss.SSS").format("HH:mm:ss")+'<div id="text">'+dataActions[i].action_desc+'</div>';
                   if (dataActions[i].name != null){
                     //console.log("aqui "+item)
                     participants[dataActions[i].name].push(item);
@@ -161,7 +198,7 @@ alldata["criticalTs"] = [];
             item["align"] = "center";
             item["className"] = 'cpr';
             
-            item["content"] = moment(CPR_array[i].duration,"hh:mm:ss.SSS").format("mm:ss")+'<div id="text">Compressions</div>';
+            item["content"] = moment(CPR_array[i].duration,"hh:mm:ss.SSS").format("HH:mm:ss")+'<div id="text">Compressions</div>';
             var nearCPR = closest(id_reg,sessions_stop);
             sessions_stop = remove_closest(nearCPR,sessions_stop);
             
@@ -189,6 +226,133 @@ alldata["criticalTs"] = [];
   //console.log(participants);
   return res.json(alldata);
 });
+
+
+//added 25-05-2019
+router.post('/generateJsonArousalData', (req, res, next) => {
+  dataActions = req.body;
+  //console.log(dataActions);
+  var alldata = {};
+  var participants = {};
+  var nparticipants = 0;
+  var CPR_array = [];
+  var sessions_stop = [];
+  var id_session = 0;
+  
+
+  for (var i = 0; i < dataActions.length; i++) {
+          if (dataActions[i].name != null){
+            participants[dataActions[i].name] = [];
+          }
+        }
+  //console.log(participants);
+  for (x in participants) {nparticipants++;}
+
+alldata["n"] = nparticipants;
+alldata["title"] = dataActions[0].session_name;
+//participants["time_start"] = newdate+" 00:00:00";
+alldata["criticalTs"] = [];
+
+        for (var i = 0; i < dataActions.length; i++) {
+          //id_session to generate json file
+          id_session = dataActions[i].id_session;
+
+          //add when the session started
+          if(dataActions[i].action_desc == "Session started"){
+            alldata["time_start"] = dataActions[i].time_action;
+          }
+          //add when the session ended
+          if(dataActions[i].action_desc == "Session ended"){
+            alldata["time_end"] = dataActions[i].time_action;
+          }
+          
+
+          //add actions that were done by a student
+          if(dataActions[i].duration != null && dataActions[i].name != null ){
+            var item = {};
+
+                   //add critical items to R1 - they don't have student associated
+                    if(dataActions[i].action_type == "critical" && dataActions[i].name == "PTN"){
+                      var ct = {};
+                      ct["event"] = dataActions[i].action_desc;
+                      ct["when"] = dataActions[i].time_action;
+                      alldata["criticalTs"].push(ct);
+
+                      var critical_item = {};
+                      //time_from_start = data[i].duration.split(":").slice(-2).join(":").split(".")[0];
+                      critical_item["id"] = participants["PTN"].length+1;
+                      critical_item["group"] = dataActions[i].id_object;
+                      critical_item["action"] = dataActions[i].action_desc;
+                      critical_item["start"] = dataActions[i].time_action;
+                      critical_item["type"] = "box";
+                      critical_item["className"] = "critical";
+                     
+                      //if(data[i].action_desc.split(" ")[0] == "Ask"){
+                        critical_item["content"] = '<img src="../../../img/warning.png" style="width: 40px; height: 40px;"><div class="special-time">'+moment(dataActions[i].duration,"hh:mm:ss.SSS").format("HH:mm:ss")+'</div><div id="text">'+dataActions[i].action_desc+'</div>';
+                      //  }
+                      //else if(data[i].action_desc.split(" ")[0] == "Lose"){
+                      //  critical_item["content"] = '<div class="special-time">'+time_from_start+'</div><img src="../../../img/lose.png" style="width: 136px; height: 112px;">';
+                      //  }
+                      participants["PTN"].push(critical_item);
+                    }
+
+                  else if(dataActions[i].action_type == "arousal"){
+                  //console.log(data[i].action_desc);
+                  //any other action
+
+                  //time_from_start = data[i].duration.split(":").slice(-2).join(":").split(".")[0];
+                  item["id"] = participants[dataActions[i].name].length+1;
+                  item["group"] = dataActions[i].id_object;
+                  //item["action"] = dataActions[i].action_desc;
+                  item["start"] = dataActions[i].time_action;
+                  //item["title"] = dataActions[i].notes;
+                  item["type"] = "box";
+                  item["className"] = "arousal";
+                  //item["content"] = moment(dataActions[i].duration,"hh:mm:ss.SSS").format("mm:ss")+'<div id="text">'+dataActions[i].action_desc+'</div>';
+                  participants[dataActions[i].name].push(item);
+                  }
+
+                  else{
+                  //console.log(data[i].action_desc);
+                  //any other action
+
+                  //time_from_start = data[i].duration.split(":").slice(-2).join(":").split(".")[0];
+                  item["id"] = participants[dataActions[i].name].length+1;
+                  item["group"] = dataActions[i].id_object;
+                  item["action"] = dataActions[i].action_desc;
+                  item["start"] = dataActions[i].time_action;
+                  item["title"] = dataActions[i].notes;
+                  item["type"] = "box";
+                  //item["className"] = "hide";
+                  item["className"] = "action "+dataActions[i].object_type.toLowerCase();
+                  item["content"] = moment(dataActions[i].duration,"hh:mm:ss.SSS").format("HH:mm:ss")+'<div id="text">'+dataActions[i].action_desc+'</div>';
+                  if (dataActions[i].name != null){
+                    //console.log("aqui "+item)
+                    participants[dataActions[i].name].push(item);
+                    //console.log("aqui "+participants)
+                  }
+                  }
+            
+          }
+
+        }//end for
+      
+      part_names = Object.keys(participants);
+        
+      alldata['participants'] = participants;
+        //console.log(alldata);
+
+  fs.writeFile("client/data/arousal_session_"+id_session+".json", JSON.stringify(alldata), function(err) {
+    if(err) {
+        return console.log(err);
+    }
+
+    console.log("The file was saved!");
+  }); 
+
+  //console.log(participants);
+  return res.json(alldata);
+});//generate Json Arousal Data
 
 router.post('/generateJson', (req, res, next) => {
   data = req.body;
@@ -324,6 +488,15 @@ participants["criticalTs"] = [];
 router.get('/getJsonFromFile', (req, res, next) => {
   const id_session = req.query.id;
   var obj = JSON.parse(fs.readFileSync('client/data/session_'+id_session+'.json', 'utf8'));
+
+  return res.json(obj);
+  
+    //return res.json(JSON.parse(results));
+});
+
+router.get('/getJsonArousalDataFromFile', (req, res, next) => {
+  const id_session = req.query.id;
+  var obj = JSON.parse(fs.readFileSync('client/data/arousal_session_'+id_session+'.json', 'utf8'));
 
   return res.json(obj);
   

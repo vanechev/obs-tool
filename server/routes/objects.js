@@ -7,7 +7,7 @@ const con = mysql.createConnection({
   host: 'localhost',
   user: 'root',
   password: '',
-  database: 'group_analytics'
+  database: 'group_analyticsV2'
 });
 
 router.get('/', (req, res, next) => {

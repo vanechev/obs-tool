@@ -67,7 +67,7 @@ body {
     }
 
 .vis-item.critical {
-      background-color: transparent;
+      background-color: white;
       border-color: none;
       border-width: 0px;
     }
@@ -94,24 +94,36 @@ body {
       border-color: #30cbea;
       
     }
+
+.vis-item.vis-dot.hide {
+      border-style:none !important;
+      
+    }
+
+
 .vis-item.vis-dot.action.rn1 {
       border-color: #30cbea;
       
     }
 
-.vis-item.vis-line.arousal{
+/*.vis-item.vis-line.arousal{
   border-width: 0px;
 }
 
 .vis-item.vis-box.arousal{
   left: 0px !important;
   top:0px !important;
-}
+}*/
 
 .vis-item.vis-dot.arousal {
-      border-color: #9966ff;
+      border-color: #6f42c1;
+      border-width: 10px !important;
+      border-radius: 10px !important;
     }
 
+.vis-item.vis-line.arousal {
+      border-left-style: none;
+    }
 .vis-item.vis-dot.action.rn2 {
       border-color: #30cbea;
       
